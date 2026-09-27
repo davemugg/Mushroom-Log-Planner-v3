@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planner Guide</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#f5efe0; --panel:#fffdf6; --ink:#2b2418; --muted:#6f6552; --line:#e3d8bd; --soft:#f1e9d4;
+  --accent:#4f7f25; --accent-ink:#fff; --warn:#b3372b;
+  --c-empty:#e8dcb8; --c-empty-ink:#a08f68; --c-path:#d9c79a;
+  --c-log:#6b4423; --c-oak:#4f8a3a; --c-maple:#c8552b; --c-pine:#1f5c46; --c-mystic:#7b4bb3; --c-mahog:#8a3b2a; --c-sap:#9dc56b;
+  --bg:#121417; --panel:#1b1e23; --ink:#e8e4da; --muted:#9a968c; --line:#2e333b; --soft:#23272e;
+  --accent:#86bf4f; --accent-ink:#0e1508; --warn:#ef7a6c;
+  --c-empty:#2b2f36; --c-empty-ink:#6d7079; --c-path:#565c67;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f5efe0; --panel:#fffdf6; --ink:#2b2418; --muted:#6f6552; --line:#e3d8bd; --soft:#f1e9d4;
+  --accent:#4f7f25; --accent-ink:#fff; --warn:#b3372b;
+  --c-empty:#e8dcb8; --c-empty-ink:#a08f68; --c-path:#d9c79a;
+  --c-log:#6b4423; --c-oak:#4f8a3a; --c-maple:#c8552b; --c-pine:#1f5c46; --c-mystic:#7b4bb3; --c-mahog:#8a3b2a; --c-sap:#9dc56b;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 4px;max-width:1180px;margin:0 auto}
+h1{margin:0;font-size:22px;line-height:1.3}
+.sub{margin:2px 0 0;color:var(--muted);font-size:14px}
+.navlinks{display:flex;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.btn{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink);font:inherit;font-size:12.5px;text-decoration:none;cursor:pointer;line-height:1.4}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;padding:12px 20px 60px;max-width:1180px;margin:0 auto;align-items:start}
+nav.toc{position:sticky;top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13.5px}
+nav.toc b{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+nav.toc a{display:block;padding:3px 0;color:var(--ink);text-decoration:none}
+nav.toc a:hover{color:var(--accent)}
+nav.toc a.s{padding-left:12px;color:var(--muted)}
+@media (max-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr);padding:12px 16px 48px}
+  .top{padding:16px 16px 4px}
+  nav.toc{position:static}
+}
+
+/* Narrow screens: header buttons wrap under the title; tables become stacked label/value cards */
+@media (max-width:700px){
+  .top{flex-direction:column;align-items:stretch;gap:10px}
+  .navlinks{justify-content:flex-start}
+}
+@media (max-width:560px){
+  table.stack thead{display:none}
+  table.stack,table.stack tbody,table.stack tfoot{display:block}
+  table.stack tr{display:grid;grid-template-columns:repeat(var(--stack-cols,2),minmax(0,1fr));column-gap:16px;padding:8px 0;border-bottom:1px solid var(--line)}
+  table.stack td{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border:0;padding:2px 0;text-align:right;white-space:normal}
+  table.stack td::before{content:attr(data-label);color:var(--muted);font-weight:400;text-align:left;font-size:.92em}
+  table.stack td:first-child{grid-column:1/-1;justify-content:flex-start;font-weight:700;text-align:left}
+  table.stack td:first-child::before{content:none}
+  table.stack td:empty,table.stack .hide-sm{display:none}
+}
+
+main{min-width:0}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:18px}
+@media (max-width:500px){section.card{padding:14px 16px}}
+h2{font-size:19px;margin:0 0 10px;scroll-margin-top:12px}
+h3{font-size:15.5px;margin:20px 0 6px;scroll-margin-top:12px}
+p{margin:8px 0}
+ul,ol{margin:8px 0;padding-left:22px}
+li{margin:4px 0}
+.muted{color:var(--muted)}
+.formula{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13.5px;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:10px 0;overflow-x:auto;white-space:pre;line-height:1.55}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.9em;background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.scroll{overflow-x:auto;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+td.n,th.n{text-align:right}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px;border:1px solid rgba(0,0,0,.2)}
+.opt{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:14px 0}
+.opt b.name{display:block}
+.note{background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:10px 14px;margin:12px 0;font-size:14px}
+.demo{display:flex;flex-wrap:wrap;gap:20px;align-items:center;margin:12px 0}
+.mini{display:grid;grid-template-columns:repeat(9,22px);gap:1px;background:var(--line);border:1px solid var(--line);width:max-content}
+.mini div{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.mini .e{background:var(--c-empty)}
+.mini .r{box-shadow:inset 0 0 0 999px rgba(255,255,255,.18)}
+.mini .L{background:var(--c-log)}
+.mini .P{background:var(--c-pine)}
+.demo .cap{flex:1;min-width:220px;font-size:14px}
+@media (max-width:560px){
+  .formula{white-space:pre-wrap;font-size:12.5px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>📖 Mushroom Log Planner 3: Guide &amp; Methods</h1>
+    <p class="sub">What the planner does, what every option means, and exactly how the numbers are calculated.</p>
+  </div>
+  <div class="navlinks"><a class="btn" href="results.html">📊 Tile study</a><a class="btn" href="index.html" onclick="if (history.length > 1) { history.back(); return false; }">← Back to planner</a><button class="btn" id="themeBtn">☀ Light</button></div>
+</header>
+
+<div class="layout">
+  <nav class="toc">
+    <b>Contents</b>
+    <a href="#overview">What it does</a>
+    <a href="#quick">Quick start</a>
+    <a href="#options">Options</a>
+    <a class="s" href="#opt-mode">Layout type</a>
+    <a class="s" href="#opt-plot">Plot &amp; walkways</a>
+    <a class="s" href="#opt-tile">Repeating tile</a>
+    <a class="s" href="#opt-trees">Trees</a>
+    <a class="s" href="#opt-target">Mushroom target</a>
+    <a class="s" href="#opt-tap">Tapping</a>
+    <a class="s" href="#opt-cond">Conditions</a>
+    <a href="#reading">Reading the results</a>
+    <a href="#calc">How it's calculated</a>
+    <a class="s" href="#calc-pool">Mushroom type</a>
+    <a class="s" href="#calc-amount">Amount</a>
+    <a class="s" href="#calc-quality">Quality &amp; price</a>
+    <a class="s" href="#calc-time">Timing</a>
+    <a class="s" href="#calc-example">Worked example</a>
+    <a class="s" href="#calc-tap">Tapping</a>
+    <a class="s" href="#calc-rules">Tree spacing</a>
+    <a class="s" href="#calc-reach">Reachability</a>
+    <a class="s" href="#calc-target">Target share</a>
+    <a class="s" href="#calc-tiles">Repeating tiles</a>
+    <a href="#search">The search method</a>
+    <a href="#limits">Assumptions &amp; limits</a>
+    <a href="#sources">Sources</a>
+  </nav>
+
+  <main>
+    <section class="card" id="overview">
+      <h2>What it does</h2>
+      <p>In Stardew Valley 1.6, a <b>Mushroom Log</b> produces mushrooms every few days. What it produces depends on the trees around it. More trees mean more mushrooms and better quality, and the tree <i>types</i> decide which mushrooms you get. The trees can also be tapped for syrups at the same time.</p>
+      <p>The planner takes a rectangular plot of land and looks for the arrangement of logs, trees and walkways that earns the most gold per day. The result includes:</p>
+      <ul>
+        <li>a color-coded map of the layout with a legend,</li>
+        <li>a shopping list of logs (and the Hardwood and Moss to craft them), trees, seeds and tappers,</li>
+        <li>expected mushrooms by type and quality, plus tapper products,</li>
+        <li>earnings per day, per 28-day season and per 112-day year.</li>
+      </ul>
+      <p>You can ask for a minimum share of one mushroom type (for example, "at least 55% Morels"), include or leave out tapping, and require walkways that fit how you play.</p>
+      <p><b>New in version 3:</b> a <a href="results.html">tile size study</a> page with charts of which repeating-tile size earns the most, and every best layout drawn out.</p>
+      <p><b>New in version 2: repeating tiles.</b> Instead of one fixed plot, the planner can design a small pattern (a <i>tile</i>) that you copy side by side as you craft more logs. Trees in one copy feed the logs in the next, and walkways join up across copies, so the planner designs the tile for how it performs when it's surrounded by copies of itself. See <a href="#opt-tile">Repeating tile</a> and <a href="#calc-tiles">how it's calculated</a>.</p>
+      <div class="note">In this guide a <b>square</b> or a <b>tile</b> in the older sections means one spot on the grid. In the repeating-tile sections, <b>tile</b> means the whole repeating pattern and <b>square</b> means one spot in it.</div>
+    </section>
+
+    <section class="card" id="quick">
+      <h2>Quick start</h2>
+      <ol>
+        <li>Choose <b>Fixed plot</b> or <b>Repeating tile</b> at the top. For a fixed plot, enter its <b>Width</b> and <b>Height</b>. For a repeating tile, enter the tile size or tick <b>Find the best tile size</b>.</li>
+        <li>Tick the <b>trees you can plant</b> (leave Mystic off if you don't have Mystic Tree Seeds yet).</li>
+        <li>Optionally choose a <b>preferred mushroom</b> and a minimum share.</li>
+        <li>Set the <b>tapping</b> and <b>walkway</b> options to match your game.</li>
+        <li>Press <b>Generate optimal layout</b>. The map updates live while it searches.</li>
+        <li>Hover over tiles to inspect them, or pick a brush and edit the layout by hand. The totals update right away.</li>
+      </ol>
+      <div class="note">Settings like tapping, moss and rain update the numbers straight away, but they don't rearrange the layout. After changing a setting, press Generate again to get a layout optimized for it.</div>
+    </section>
+
+    <section class="card" id="options">
+      <h2>Options</h2>
+
+      <h3 id="opt-mode">Layout type</h3>
+      <div class="opt"><b class="name">Fixed plot</b>Plans one rectangle of land of a set size. This works exactly like version 1.</div>
+      <div class="opt"><b class="name">Repeating tile</b>Designs a pattern you can place again and again next to itself, and shows how a group of copies performs. Each layout type keeps its own layout, so switching back and forth loses nothing. The first time you open the repeating-tile view, it runs a quick search to fill it in.</div>
+
+      <h3 id="opt-plot">Plot &amp; walkways</h3>
+      <div class="opt"><b class="name">Width (X) / Height (Y)</b>The plot size in tiles, 3 to 64 each. Changing it keeps whatever overlaps the old layout, then leaves the rest empty until you generate again.</div>
+      <div class="opt"><b class="name">Leave walkways so you can reach every log and tapped tree</b>
+        When on, a log or tapped tree only counts if you can stand next to it on a walkway (an empty tile) that you can reach. Normally "next to" means any of the 8 surrounding tiles, since you can harvest diagonally with a mouse. The plot's outer edge is treated as open ground, so items on the edge count as reachable, and a walkway counts if it touches the edge anywhere.
+        When off, the planner ignores access entirely and packs the plot as densely as possible.</div>
+      <div class="opt"><b class="name">Harvest only from walkways, never from outside the plot's edge</b>
+        Use this when the land around the plot is blocked (fences, buildings, crops), or when you simply want to do all your collecting from inside the plot. You can still walk in from any edge, but a log or tapped tree on the edge counts only if a walkway tile inside the plot is beside it. This is always on when the continuous-path option is on.</div>
+      <div class="opt"><b class="name">Make the walkway one continuous path with a single entrance</b>
+        Treats the plot as fenced in. Only one connected walkway network counts, and it has to touch the <b>Entrance side</b> you choose (Bottom, Top, Left, Right, or Any edge). Items on the plot's edge are no longer reachable from outside. The entrance is marked on the map with a green arrow. Empty tiles that aren't part of the path are drawn dotted as "unused".
+        The path doesn't have to come out the other side. It can branch and dead-end freely.</div>
+      <div class="opt"><b class="name">Console mode</b>
+        For controller players, who can only interact with the tile they're facing. Every log must have a walkway directly beside it (up, down, left or right). Diagonal tiles no longer count. <b>Apply console mode to tapped trees too</b> applies the same rule to trees with tappers. Trees that fail it just aren't tapped; they still help nearby logs.</div>
+
+      <h3 id="opt-tile">Repeating tile</h3>
+      <p>These settings appear when you choose <b>Repeating tile</b>. The walkway options above still apply, with the changes noted here.</p>
+      <div class="opt"><b class="name">Tile width / Tile height</b>The size of the repeating pattern in squares, 2 to 16 each.</div>
+      <div class="opt"><b class="name">Find the best tile size</b>Tries every tile size from 2×2 up to the width and height you entered. It keeps the one that earns the most gold per square of land, then spends the rest of the search time improving it. The map title says "best size found" when this was used. Larger limits test more sizes, so each size gets a shorter search; 8×8 is a good limit for Normal or Thorough.</div>
+      <div class="opt"><b class="name">Preview: tiles across / down</b>How many copies to draw on the map and total up in the "Preview" figure, 1 to 12 each way. This only changes the display and totals, not the tile.</div>
+      <div class="opt"><b class="name">Walkways in a repeating tile</b>
+        A large group of copies has no outside edge near its middle, so walkways must run off the tile's edges and join the walkways in the next copy. A walkway that stays inside one tile counts as unreachable. With <b>Make all walkways one connected network across every tile</b> (the repeating-tile version of the continuous-path option), the walkways must join up both across and down, so every tile connects to every other. Without it, walkways can be separate strips, each running off the edge of the finished group. The entrance-side setting doesn't apply. <b>Harvest only from walkways</b> applies to the outer edge of the finished group.</div>
+
+      <h3 id="opt-trees">Trees you can plant</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Tree</th><th>Adds to a nearby log's pool</th><th>Tapper product</th><th>Seed</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sw" style="background:var(--c-oak)"></span>Oak</td><td>Morel</td><td>Oak Resin</td><td>Acorn</td></tr>
+          <tr><td><span class="sw" style="background:var(--c-maple)"></span>Maple</td><td>Red (90%) or Purple (10%)</td><td>Maple Syrup</td><td>Maple Seed</td></tr>
+          <tr><td><span class="sw" style="background:var(--c-pine)"></span>Pine</td><td>Chanterelle</td><td>Pine Tar</td><td>Pine Cone</td></tr>
+          <tr><td><span class="sw" style="background:var(--c-mystic)"></span>Mystic</td><td>Purple Mushroom</td><td>Mystic Syrup</td><td>Mystic Tree Seed</td></tr>
+          <tr><td><span class="sw" style="background:var(--c-mahog)"></span>Mahogany</td><td>A random mushroom (Common, Red or Purple)</td><td>Sap</td><td>Mahogany Seed</td></tr>
+        </tbody>
+      </table></div>
+      <div class="opt"><b class="name">Allow stunted saplings as filler</b>
+        A wild tree won't grow past stage 4 if a grown tree is on any of its 8 surrounding tiles. The planner can use this on purpose: a sapling squeezed between grown trees stays small forever. It still counts as a tree near a log (so more mushrooms and better quality), but it can't be tapped and adds nothing specific to the pool. It only increases the number of random mushrooms. Any wild tree seed works.</div>
+
+      <h3 id="opt-target">Mushroom target</h3>
+      <div class="opt"><b class="name">Preferred mushroom</b>
+        "None" maximizes gold regardless of the mix. Pick a mushroom to require a minimum share of all mushrooms produced.</div>
+      <div class="opt"><b class="name">Minimum share</b>
+        The percentage of all mushrooms that must be the preferred type. Logs always mix in random mushrooms, so 100% is impossible. The hint under the slider shows the highest share you can get with the trees you've allowed (see <a href="#calc-target">Target share</a>). If you ask for more, the planner gets as close as it can and tells you. Meeting the target comes before earning gold: the planner will give up gold to reach it.</div>
+
+      <h3 id="opt-tap">Tapping</h3>
+      <div class="opt"><b class="name">Tap the trees and include what they produce</b>Puts a tapper on every reachable grown tree and adds its products to the yield and earnings. When off, trees are valued only for what they do for the logs.</div>
+      <div class="opt"><b class="name">Tapper type</b>A regular Tapper or a Heavy Tapper (about twice as fast).</div>
+      <div class="opt"><b class="name">Tapper profession</b>The Foraging level-10 profession: Maple Syrup, Oak Resin, Pine Tar and Mystic Syrup sell for 25% more. It doesn't affect Sap or mushrooms.</div>
+
+      <h3 id="opt-cond">Conditions</h3>
+      <div class="opt"><b class="name">Share of trees with moss</b>The average share of grown Oak, Maple and Pine trees that have moss on them. Mossy trees count twice for quality. It doesn't change the number or type of mushrooms.</div>
+      <div class="opt"><b class="name">Rainy days</b>How often it rains. Rain makes a log finish a day sooner, which the planner estimates (see <a href="#calc-time">Timing</a>).</div>
+      <div class="opt"><b class="name">Search time</b>How long the optimizer searches: 2, 5 or 12 seconds. Longer searches find better layouts on average, which matters most for large plots and when walkway options are on. Each run is random, so running again can give a slightly different result.</div>
+    </section>
+
+    <section class="card" id="reading">
+      <h2>Reading the results</h2>
+      <h3>The map</h3>
+      <ul>
+        <li><b>🍄</b> Mushroom Log; <b>O / M / P / Y / H</b> Oak, Maple, Pine, Mystic, Mahogany; <b>s</b> stunted sapling.</li>
+        <li>A <b>yellow dot</b> in a tree's corner means it has a tapper.</li>
+        <li><b>Walkway</b> tiles are shaded. <b>Dotted</b> tiles are empty ground you can't reach from the walkway. The <b>green arrow</b> is the entrance (continuous-path mode only).</li>
+        <li>A <b>red outline</b> means you can't reach the item, so it isn't counted (logs) or isn't tapped (trees).</li>
+        <li><b>Red stripes</b> mean a tile breaks the tree-spacing rules (only possible after editing by hand).</li>
+        <li><b>Repeating tile:</b> the map shows the preview group. The bright top-left copy is the pattern, and the dimmed copies show how it repeats. Gold lines mark the tile edges. Painting any copy changes the pattern, so every copy updates.</li>
+      </ul>
+      <h3>Inspecting and editing</h3>
+      <p>With the <b>Inspect</b> brush, hovering over a log highlights its 7×7 range and shows its tree count, mushrooms per harvest, mushroom mix, quality odds and gold per day. Hovering over a tree shows what it adds to logs and what its tapper makes. Pick any other brush and click or drag to paint tiles. Everything is recalculated immediately.</p>
+      <h3>The panels</h3>
+      <ul>
+        <li><b>Headline figures:</b> gold per day, season and year (split into mushrooms and tapping), mushrooms per season, and your target's share if you set one.</li>
+        <li><b>What you need:</b> counts of logs (with Hardwood and Moss), each tree type (with its seed), saplings, tappers and walkway tiles.</li>
+        <li><b>Mushroom yield:</b> share, per-season and per-year counts, and yearly gold by type, plus the average quality mix.</li>
+        <li><b>Tapping yield:</b> for each product, the number of trees, days per product, per-season count and yearly gold.</li>
+      </ul>
+      <h3>Repeating-tile panels</h3>
+      <ul>
+        <li><b>Per tile:</b> gold per day and per year for one tile surrounded by copies on every side, what the tile holds, and the preview group's total. The shopping list and the yield tables are also per tile, so multiply by the number of copies you plan to place.</li>
+        <li><b>Growing your farm:</b> the logs, trees and gold per day for groups of 1, 2, 4, 6, 9, 16, 25 and 36 copies (plus your preview size), with gold per tile. Small groups earn less per tile because their outer copies have fewer neighbors. The per-tile figure rises toward the fully surrounded value as the group grows. Logs on the outer edge whose walkway would sit in a copy you haven't placed yet are listed as unreachable.</li>
+        <li><b>Hovering a log in the preview</b> shows what it earns where it sits, and what the same log earns with copies on every side.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="calc">
+      <h2>How it's calculated</h2>
+      <p>All figures are <b>long-run averages</b>. The planner doesn't simulate random harvests. It works out the expected value of each random roll the game makes. Mechanics follow the Stardew Valley wiki (see <a href="#sources">Sources</a>).</p>
+
+      <div class="demo">
+        <div class="mini" aria-label="A log with its 7 by 7 range highlighted">
+          <!-- 9x9 with the 7x7 around center highlighted -->
+          <div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div>
+          <div class="e"></div><div class="P r">P</div><div class="e r"></div><div class="P r">P</div><div class="e r"></div><div class="P r">P</div><div class="e r"></div><div class="e r"></div><div class="e"></div>
+          <div class="e"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e"></div>
+          <div class="e"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e"></div>
+          <div class="e"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="L">🍄</div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e"></div>
+          <div class="e"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e"></div>
+          <div class="e"></div><div class="P r">P</div><div class="e r"></div><div class="P r">P</div><div class="e r"></div><div class="P r">P</div><div class="e r"></div><div class="e r"></div><div class="e"></div>
+          <div class="e"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e r"></div><div class="e"></div>
+          <div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="e"></div><div class="P">P</div>
+        </div>
+        <p class="cap">A log checks the <b>7×7 square</b> centered on itself: 3 tiles in every direction, including diagonally. Here the six highlighted Pines count. The Pine in the far corner is outside the range and doesn't. This log is the <a href="#calc-example">worked example</a> below.</p>
+      </div>
+
+      <h3 id="calc-pool">1. Which mushroom: the pool</h3>
+      <p>Let <b>n</b> be the number of trees in range. This counts every tree in range, grown or not, including stunted saplings. At each harvest the game builds a list (the "pool") and picks one entry at random:</p>
+      <ul>
+        <li><b>Random entries:</b> <code>max(1, floor(0.75 × n))</code> of them. Each is Common 80.75%, Red 14.25% or Purple 5%.</li>
+        <li><b>One entry per grown tree</b>, depending on its type (see the <a href="#opt-trees">tree table</a>). Saplings add nothing here.</li>
+      </ul>
+      <div class="formula">P(type) = (random entries × random chance of type + tree entries of type) / (random entries + grown trees)</div>
+      <p>Every mushroom in one harvest is the same type, so this is also the expected share of each type.</p>
+
+      <h3 id="calc-amount">2. How many</h3>
+      <div class="formula">k      = floor(n / 2)
+amount = clamp(k × (1 or 2, 50/50), 1, 5)
+average amount = (clamp(k, 1, 5) + clamp(2k, 1, 5)) / 2</div>
+      <p>So 0–3 trees give 1–2 mushrooms, and <b>10 or more trees always give 5</b> (the cap).</p>
+
+      <h3 id="calc-quality">3. Quality and price</h3>
+      <div class="formula">p = min(1, (n + mossy trees) / 40)      ← chance of each upgrade step
+Normal  = 1 − p
+Silver  = p(1 − p)
+Gold    = p²(1 − p)
+Iridium = p³</div>
+      <p>The game rolls quality up one step at a time (Normal → Silver → Gold → Iridium) with chance <i>p</i> at each step, stopping at the first failure. Mossy trees are counted as <code>grown Oak/Maple/Pine in range × moss share</code>. Sell prices are the base price × 1.25 (Silver), × 1.5 (Gold) or × 2 (Iridium), rounded down:</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Mushroom</th><th class="n">Normal</th><th class="n">Silver</th><th class="n">Gold</th><th class="n">Iridium</th></tr></thead>
+        <tbody>
+          <tr><td>Common Mushroom</td><td class="n">40g</td><td class="n">50g</td><td class="n">60g</td><td class="n">80g</td></tr>
+          <tr><td>Red Mushroom</td><td class="n">75g</td><td class="n">93g</td><td class="n">112g</td><td class="n">150g</td></tr>
+          <tr><td>Purple Mushroom</td><td class="n">250g</td><td class="n">312g</td><td class="n">375g</td><td class="n">500g</td></tr>
+          <tr><td>Morel</td><td class="n">150g</td><td class="n">187g</td><td class="n">225g</td><td class="n">300g</td></tr>
+          <tr><td>Chanterelle</td><td class="n">160g</td><td class="n">200g</td><td class="n">240g</td><td class="n">320g</td></tr>
+        </tbody>
+      </table></div>
+      <p class="muted">The Botanist profession doesn't apply to machine output, so it isn't modeled.</p>
+
+      <h3 id="calc-time">4. Timing</h3>
+      <p>A log produces every <b>4 days</b>, all year round (including winter). The wiki says rainy days "take a day less" but doesn't spell out how several rainy days in one cycle combine. With rain chance <i>r</i> per day, the planner estimates the cycle length as:</p>
+      <div class="formula">days per harvest ≈ 4 − (1 − (1 − r)⁴)      ← 4 days minus the chance of at least one rainy day in the cycle</div>
+      <p>This is an estimate, not an exact model of the game's timer. Totals use a <b>28-day season</b> and a <b>112-day year</b>.</p>
+
+      <h3 id="calc-example">Worked example</h3>
+      <p>The log in the diagram above has <b>6 grown Pines</b> in range, no moss and no rain:</p>
+      <ul>
+        <li><b>Pool:</b> random entries = floor(0.75 × 6) = 4, plus 6 Chanterelle entries, for 10 total. So 60% Chanterelle, and the 4 random entries give 32.3% Common, 5.7% Red and 2.0% Purple.</li>
+        <li><b>Amount:</b> k = 3, so either 3 or 6 (capped at 5), giving an average of <b>4 per harvest</b>. At one harvest every 4 days, that's 1 mushroom per day.</li>
+        <li><b>Quality:</b> p = 6 / 40 = 15%, so 85% Normal, 12.75% Silver, 1.9% Gold, 0.3% Iridium.</li>
+        <li><b>Value:</b> an average Chanterelle is worth 167.2g, Common 41.8g, Red 78.3g, Purple 261.2g. Weighted by the pool, that's <b>≈ 123.5g per day</b>, the same figure the planner's tooltip shows for this log.</li>
+      </ul>
+      <p>Adding four more trees to this log (10 total) locks the amount at 5 and raises quality. That's why optimized layouts pack trees tightly around logs.</p>
+
+      <h3 id="calc-tap">5. Tapping</h3>
+      <div class="formula">gold per day per tree = price × quantity / days per product</div>
+      <div class="scroll"><table>
+        <thead><tr><th>Tree</th><th>Product</th><th class="n">Price</th><th class="n">Tapper</th><th class="n">Heavy</th><th class="n">g/day (Tapper)</th><th class="n">g/day (Heavy)</th></tr></thead>
+        <tbody>
+          <tr><td>Oak</td><td>Oak Resin</td><td class="n">150g</td><td class="n">7 d</td><td class="n">3 d</td><td class="n">21.4</td><td class="n">50.0</td></tr>
+          <tr><td>Maple</td><td>Maple Syrup</td><td class="n">200g</td><td class="n">9 d</td><td class="n">4 d</td><td class="n">22.2</td><td class="n">50.0</td></tr>
+          <tr><td>Pine</td><td>Pine Tar</td><td class="n">100g</td><td class="n">5 d</td><td class="n">2 d</td><td class="n">20.0</td><td class="n">50.0</td></tr>
+          <tr><td>Mystic</td><td>Mystic Syrup</td><td class="n">1,000g</td><td class="n">7 d</td><td class="n">3 d</td><td class="n">142.9</td><td class="n">333.3</td></tr>
+          <tr><td>Mahogany</td><td>Sap: 5–10 (Tapper), 3–8 (Heavy)</td><td class="n">2g</td><td class="n">1 d</td><td class="n">1 d</td><td class="n">15.0</td><td class="n">11.0</td></tr>
+        </tbody>
+      </table></div>
+      <p>The Tapper profession multiplies the four syrup prices by 1.25 (rounded down). Tappers work in every season. A tapped tree still counts fully for nearby logs.</p>
+
+      <h3 id="calc-rules">6. Tree spacing rules</h3>
+      <ul>
+        <li><b>Grown trees can't touch</b>, not even diagonally. A seedling won't grow past stage 4 if a grown tree is on any of its 8 surrounding tiles, so the planner never places two grown trees side by side.</li>
+        <li><b>A stunted sapling must touch at least one grown tree</b>, or it would eventually finish growing.</li>
+        <li>Logs and walkways can go anywhere, including right beside trees.</li>
+      </ul>
+      <p>As a result, a log's 7×7 range holds at most 16 grown trees. With saplings filling the gaps, it can have far more trees in total.</p>
+
+      <h3 id="calc-reach">7. Reachability</h3>
+      <p>With walkways on, the planner "floods" outward through empty tiles to find the ones you can walk to, moving up, down, left and right:</p>
+      <ul>
+        <li><b>Normal:</b> the flood starts from every empty tile on the plot's edge. An item counts if it's on the edge or if any of its 8 neighbors is a reachable walkway.</li>
+        <li><b>Harvest only from walkways:</b> the same flood, but being on the edge no longer counts. Every item needs a reachable walkway beside it.</li>
+        <li><b>Continuous path:</b> each separate walkway network touching the entrance side is flooded on its own. The planner adds up what each network can reach and keeps only the single best one. Edge items get no special treatment.</li>
+        <li><b>Console mode:</b> only the 4 directly adjacent tiles count as standing spots (for logs, and for tapped trees if that box is ticked).</li>
+      </ul>
+
+      <h3 id="calc-target">8. Target share</h3>
+      <p>Because every log adds random entries to its pool, even a log surrounded by nothing but Oaks can't make only Morels. The best case for one log is two trees of the right type, since that gives the fewest random entries per tree:</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Mushroom</th><th>Best trees</th><th class="n">Highest share</th></tr></thead>
+        <tbody>
+          <tr><td>Common</td><td>none / Mahogany / saplings</td><td class="n">80.75%</td></tr>
+          <tr><td>Purple</td><td>2 Mystic</td><td class="n">68.3%</td></tr>
+          <tr><td>Morel</td><td>2 Oak</td><td class="n">66.7%</td></tr>
+          <tr><td>Chanterelle</td><td>2 Pine</td><td class="n">66.7%</td></tr>
+          <tr><td>Red</td><td>2 Maple</td><td class="n">64.75%</td></tr>
+        </tbody>
+      </table></div>
+      <p>Few trees means few mushrooms, though. At higher tree counts the share settles around 57–59%. So a high target trades gold for purity, and the optimizer handles that trade-off automatically. If you're short of the target, the score drops by <code>3000 × plot tiles</code> gold per day per 100% of shortfall. That's large enough that reaching the target always comes first.</p>
+
+      <h3 id="calc-tiles">9. Repeating tiles</h3>
+      <p>For the per-tile figures, the planner treats the tile as repeating forever in every direction. Anything that runs off one edge carries on in the copy next door:</p>
+      <ul>
+        <li><b>Trees near an edge count for logs in the next tile.</b> A log's 7×7 range wraps around to the opposite side of the tile. On a tile narrower than 7 squares, the range can reach the same tree square in two different copies, and each copy counts, just as it would on the farm.</li>
+        <li><b>Spacing rules apply across edges.</b> A grown tree on the right edge can't sit beside a grown tree on the left edge, because the next copy puts them side by side.</li>
+        <li><b>Walkways must join up across edges.</b> The planner floods each walkway network across the tile's edges and checks whether it meets itself again one tile over. A network that meets itself going across or down runs on forever as a strip, so you can reach it from the outside of the finished group. A network that meets itself in two different directions joins every tile together. That's what the connected-network option requires. A network that never leaves its tile would be sealed in by the copies around it, so anything that relies on it is unreachable.</li>
+      </ul>
+      <p>The tile's score is its gold per day with copies on every side, calculated exactly as for a fixed plot. It uses the same target-share rule, based on the tile's own mushroom mix.</p>
+      <p>The <b>preview</b> and the <b>Growing your farm</b> table don't wrap. The planner builds the actual group of copies as an ordinary fixed plot and calculates it normally: logs on the outer edge see fewer trees, and outer edges can be walked in from (unless you chose to harvest only from walkways). That's why a small group earns less per tile than the surrounded figure, and why the gap shrinks as the group grows.</p>
+      <p>With <b>Find the best tile size</b>, sizes are compared by gold per day per square of land. A 4×6 tile earning 1,800g (75g per square) beats a 6×6 tile earning 2,600g (72g per square), because the same land holds 1.5 of the smaller tiles.</p>
+    </section>
+
+    <section class="card" id="search">
+      <h2>The search method</h2>
+      <p>Even a small plot has far too many possible layouts to check them all, so the planner searches using <b>simulated annealing</b>, followed by a clean-up pass.</p>
+      <ol>
+        <li><b>Starting layouts.</b> It scores about ten ready-made patterns for each tree type you allowed (plus an empty plot and a plot full of logs), and starts from the best. They include trees on every other tile, rows of trees and logs with walkways between them, and a central path with side branches.</li>
+        <li><b>Annealing (about 85% of the search time).</b> On each step it makes one small random change:
+          <ul>
+            <li>55%: set a random tile to a random type,</li>
+            <li>30%: swap two tiles up to 3 apart,</li>
+            <li>15%: copy a neighboring tile's type.</li>
+          </ul>
+          Changes that break the <a href="#calc-rules">spacing rules</a> are thrown out right away. Improvements are always kept. A change that makes things worse by <i>Δ</i> is kept with chance <code>e^(−Δ/T)</code>, where the "temperature" <i>T</i> starts high and falls steadily to near zero. Early on, this lets the search escape layouts that look good but aren't the best. By the end it only accepts improvements. The starting temperature is set by test-running about 150 random changes to see how big a typical change is.</li>
+        <li><b>Clean-up (the rest).</b> It visits every tile, tries every allowed type there, and keeps any change that helps, for up to three passes or until time runs out. Finally, it removes any log that can't be reached, since it earns nothing, so it doesn't appear on your shopping list.</li>
+      </ol>
+      <p><b>Repeating tiles</b> use the same search with wrapped edges: a swap or copy can reach across the tile edge, and the starting layouts include patterns with a walkway along the tile's right edge, bottom edge or both, so the walkways join the next copy. Starting layouts that break the spacing rules across an edge are skipped. <b>Find the best tile size</b> splits the time in two. The first half gives every size a short search. The second half runs a full search on the size that earned the most per square, starting from the best layout found for it.</p>
+      <p>To keep it fast, a change only recalculates logs within 3 tiles of it. The walkway flood is redone after every change, and the search runs in a background thread so the page stays responsive. The best layout found so far is always the one shown.</p>
+      <div class="note">It's a heuristic: it finds very good layouts, but there's no guarantee of the single best one. On big plots, try a longer search time or run it twice and keep the better result.</div>
+    </section>
+
+    <section class="card" id="limits">
+      <h2>Assumptions &amp; limits</h2>
+      <ul>
+        <li>Every tile in the plot can hold a tree or a log. Buildings, water and other obstacles aren't modeled. Paint them as empty tiles, or plan a smaller rectangle.</li>
+        <li>Repeating tiles are placed in a straight grid, edge to edge. Staggered placements (like bricks) aren't explored.</li>
+        <li>Trees are assumed to be fully grown. Growing time and the first harvest's delay aren't counted.</li>
+        <li>Moss is a single average share, not tracked per tree. Moss doesn't grow in winter, and picking it removes the quality boost.</li>
+        <li>Rain is an estimate (see <a href="#calc-time">Timing</a>).</li>
+        <li>Mahogany sap is taken as the average of its range: 7.5 per day with a Tapper (5–10) and 5.5 with a Heavy Tapper (3–8).</li>
+        <li>Mushroom Trees, Green Rain trees, palm trees and fruit trees can't be placed in the planner.</li>
+        <li>Figures are sale values. The cost of seeds, tappers and crafting materials isn't subtracted.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="sources">
+      <h2>Sources</h2>
+      <p>Game mechanics follow the Stardew Valley wiki pages for
+        <a href="https://stardewvalleywiki.com/Mushroom_Log" target="_blank" rel="noopener">Mushroom Log</a>,
+        <a href="https://stardewvalleywiki.com/Tapper" target="_blank" rel="noopener">Tapper</a>,
+        <a href="https://stardewvalleywiki.com/Trees" target="_blank" rel="noopener">Trees</a> and
+        <a href="https://stardewvalleywiki.com/Skills" target="_blank" rel="noopener">Skills</a>. Version 1.6 values.</p>
+      <p><a href="index.html">← Back to the planner</a></p>
+    </section>
+  </main>
+</div>
+
+<script>
+// Copy each column's heading onto its cells, for the stacked phone layout
+function labelTables(root) {
+  root.querySelectorAll('table.stack').forEach(t => {
+    const heads = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    t.querySelectorAll('tbody tr, tfoot tr').forEach(tr => [...tr.children].forEach((td, i) => { if (heads[i] && !td.dataset.label) td.dataset.label = heads[i]; }));
+  });
+}
+document.querySelectorAll('.scroll table').forEach(t => t.classList.add('stack'));
+labelTables(document);
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  document.getElementById('themeBtn').textContent = t === 'dark' ? '☀ Light' : '🌙 Dark';
+  try { localStorage.setItem('mlp-theme', t); } catch (e) {}
+}
+let saved = 'dark'; try { saved = localStorage.getItem('mlp-theme') || 'dark'; } catch (e) {}
+setTheme(saved);
+document.getElementById('themeBtn').addEventListener('click', () =>
+  setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+</script>
+</body>
+</html>

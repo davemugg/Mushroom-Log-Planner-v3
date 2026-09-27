@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tile Size Study</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#121417; --panel:#1b1e23; --ink:#e8e4da; --muted:#9a968c; --line:#2e333b; --soft:#23272e;
+  --accent:#86bf4f; --accent-ink:#0e1508; --warn:#ef7a6c;
+  --c-empty:#2b2f36; --c-empty-ink:#6d7079; --c-path:#565c67;
+  --c-log:#6b4423; --c-oak:#4f8a3a; --c-maple:#c8552b; --c-pine:#1f5c46; --c-mystic:#7b4bb3; --c-mahog:#8a3b2a; --c-sap:#9dc56b;
+  --tile-line:#e8c36a;
+  --series-1:#3987e5; --series-2:#d95926; --grid:#2a2e35; --axis:#3d434c;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f5efe0; --panel:#fffdf6; --ink:#2b2418; --muted:#6f6552; --line:#e3d8bd; --soft:#f1e9d4;
+  --accent:#4f7f25; --accent-ink:#fff; --warn:#b3372b;
+  --c-empty:#e8dcb8; --c-empty-ink:#a08f68; --c-path:#d9c79a;
+  --tile-line:#a8701a;
+  --series-1:#2a78d6; --series-2:#eb6834; --grid:#ece3cc; --axis:#cbbd9a;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 4px;max-width:1180px;margin:0 auto}
+h1{margin:0;font-size:22px;line-height:1.3;text-wrap:balance}
+.sub{margin:2px 0 0;color:var(--muted);font-size:14px}
+.navlinks{display:flex;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.btn{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink);font:inherit;font-size:12.5px;text-decoration:none;cursor:pointer;line-height:1.4}
+.wrap{max-width:1180px;margin:0 auto;padding-block:12px 60px;padding-inline:20px;display:flex;flex-direction:column;gap:18px}
+@media (max-width:700px){.wrap{padding-inline:16px}.top{padding:16px 16px 4px;flex-wrap:wrap}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 22px;min-width:0}
+@media (max-width:500px){.card{padding:14px 14px}}
+h2{font-size:18px;margin:0 0 4px;text-wrap:balance}
+h3{font-size:15px;margin:16px 0 4px}
+p{margin:8px 0;max-width:75ch}
+.lede{color:var(--muted);margin:0 0 14px;font-size:14px;max-width:80ch}
+.muted{color:var(--muted)}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.88em;background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+
+/* stat tiles */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.stat .k{color:var(--muted);font-size:12.5px}
+.stat .v{font-size:26px;font-weight:800;line-height:1.25}
+.stat .s{color:var(--muted);font-size:12.5px}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:4px 0 14px}
+.seg{display:inline-grid;grid-auto-flow:column;gap:4px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--soft)}
+.seg label{position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;padding:6px 12px;border-radius:7px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg input:checked+span{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:1px}
+select{padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--soft);color:var(--ink);font:inherit;font-size:13.5px}
+.chk{display:inline-flex;gap:7px;align-items:center;font-size:13.5px;cursor:pointer}
+.chk input{accent-color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin:0 0 10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend i.sq{border-radius:2px;width:12px;height:12px}
+
+/* heatmaps */
+.heatpair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:18px 28px}
+.heat figcaption{font-weight:700;font-size:14px;margin-bottom:6px}
+.hgrid{display:grid;grid-template-columns:2.4em repeat(6,minmax(0,1fr));gap:2px;max-width:420px}
+.heat{min-width:0}
+.hgrid .ax{font-size:12px;color:var(--muted);display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.hgrid .hc{aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;cursor:default;position:relative}
+.hgrid .hc.top{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ink);z-index:1}
+.axtitle{font-size:12px;color:var(--muted);margin:2px 0 4px 2.6em}
+.hleg{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.hleg .bar{width:220px;max-width:60vw;height:10px;border-radius:5px}
+.hleg .ticks{display:flex;justify-content:space-between;width:220px;max-width:60vw;font-variant-numeric:tabular-nums}
+
+/* strip chart */
+.strip{position:relative;display:grid;grid-template-columns:3.2em 1fr 3.6em;column-gap:10px;row-gap:0;font-size:12.5px}
+.strip .lab{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums;line-height:20px}
+.strip .val{font-variant-numeric:tabular-nums;line-height:20px}
+.strip .trk{position:relative;height:20px}
+.strip .rng{position:absolute;top:9px;height:2px;background:var(--muted);opacity:.55;border-radius:1px}
+.strip .mean{position:absolute;top:3px;width:2px;height:14px;background:var(--ink);margin-left:-1px;border-radius:1px}
+.strip .dot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;cursor:default}
+.strip .dot::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--series);box-shadow:0 0 0 2px var(--panel)}
+.strip .gl{position:absolute;top:0;bottom:22px;left:calc(3.2em + 10px);right:calc(3.6em + 10px);pointer-events:none}
+.strip .gl span{position:absolute;top:0;bottom:0;width:1px;background:var(--grid)}
+.strip .ticks{position:relative;height:22px;grid-column:2}
+.strip .ticks span{position:absolute;top:4px;transform:translateX(-50%);color:var(--muted);font-variant-numeric:tabular-nums}
+.strip .xt{grid-column:2;text-align:center;color:var(--muted);font-size:12px}
+.strip .rowhl .trk,.strip .rowhl{background:transparent}
+
+/* scatter */
+.scat{position:relative;height:300px;margin:4px 0 0}
+.scat .plot{position:absolute;left:3em;right:12px;top:10px;bottom:2.6em;border-left:1px solid var(--axis);border-bottom:1px solid var(--axis)}
+.scat .gy,.scat .gx{position:absolute;background:var(--grid)}
+.scat .gy{left:0;right:0;height:1px}
+.scat .gx{top:0;bottom:0;width:1px}
+.scat .ty{position:absolute;left:-2.8em;width:2.4em;text-align:right;transform:translateY(-50%);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.scat .tx{position:absolute;bottom:-1.6em;transform:translateX(-50%);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.scat .pt{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;cursor:default}
+.scat .pt::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--series);box-shadow:0 0 0 2px var(--panel)}
+.scat .dl{position:absolute;font-size:12px;font-weight:700;white-space:nowrap;transform:translate(10px,-50%)}
+.scat .axl{position:absolute;font-size:12px;color:var(--muted)}
+
+/* table */
+details summary{cursor:pointer;font-weight:600}
+.scroll{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+tr.win td{font-weight:700}
+
+/* gallery */
+.lays{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.lay{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg);display:flex;flex-direction:column;gap:8px;min-width:0}
+.lay h3{margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.lay .rk{font-size:12px;color:var(--muted);font-weight:600}
+.lay .rk.best{color:var(--accent-ink);background:var(--accent);padding:1px 8px;border-radius:999px}
+.lay .fig{font-size:13.5px}
+.lay .fig b{font-size:18px}
+.lay .meta{font-size:12.5px;color:var(--muted)}
+.mini{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);width:max-content;max-width:100%;align-self:center}
+.mini div{width:var(--cs);height:var(--cs);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs)*.5);font-weight:800;color:#fff;position:relative;line-height:1}
+.mini .t0{background:var(--c-path);color:var(--c-empty-ink)}
+.mini .t1{background:var(--c-log)}.mini .t2{background:var(--c-oak)}.mini .t3{background:var(--c-maple)}.mini .t4{background:var(--c-pine)}
+.mini .t5{background:var(--c-mystic)}.mini .t6{background:var(--c-mahog)}.mini .t7{background:var(--c-sap);color:#2f4a12}
+.mini .dim{filter:brightness(.62) saturate(.75)}
+.mini .tr::before,.mini .tb::before{content:"";position:absolute;inset:0 -1px -1px 0;pointer-events:none;border:0 solid var(--tile-line);z-index:1}
+.mini .tr::before{border-right-width:2px}
+.mini .tb::before{border-bottom-width:2px}
+
+.tip{position:fixed;z-index:10;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 11px;font-size:12.5px;max-width:280px;box-shadow:0 6px 24px rgba(0,0,0,.25);font-variant-numeric:tabular-nums}
+.tip b{display:block}
+.find h3{margin-top:18px}
+.find h3:first-of-type{margin-top:8px}
+ul{margin:6px 0;padding-left:20px}
+li{margin:3px 0}
+/* Narrow screens: header buttons wrap under the title; tables become stacked label/value cards */
+@media (max-width:700px){
+  .top{flex-direction:column;align-items:stretch;gap:10px}
+  .navlinks{justify-content:flex-start}
+}
+@media (max-width:560px){
+  table.stack thead{display:none}
+  table.stack,table.stack tbody,table.stack tfoot{display:block}
+  table.stack tr{display:grid;grid-template-columns:repeat(var(--stack-cols,2),minmax(0,1fr));column-gap:16px;padding:8px 0;border-bottom:1px solid var(--line)}
+  table.stack td{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border:0;padding:2px 0;text-align:right;white-space:normal}
+  table.stack td::before{content:attr(data-label);color:var(--muted);font-weight:400;text-align:left;font-size:.92em}
+  table.stack td:first-child{grid-column:1/-1;justify-content:flex-start;font-weight:700;text-align:left}
+  table.stack td:first-child::before{content:none}
+  table.stack td:empty,table.stack .hide-sm{display:none}
+}
+@media (max-width:560px){
+  #numtable tr{--stack-cols:3}
+  .hgrid .hc{font-size:11px}
+  .strip{grid-template-columns:2.8em 1fr 2.8em;column-gap:6px}
+  .strip .gl{left:calc(2.8em + 6px);right:calc(2.8em + 6px)}
+  .scat .plot{left:2.4em}
+}
+@media (prefers-reduced-motion:no-preference){.hc,.dot::after,.pt::after{transition:transform .12s}.hc:hover{transform:scale(1.06)}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>📊 Tile Size Study</h1>
+    <p class="sub">Which repeating tile, up to 7×7, earns the most gold per square of land? Results from 1,440 runs of the planner's optimizer.</p>
+  </div>
+  <div class="navlinks"><a class="btn" href="index.html">← Planner</a><a class="btn" href="guide.html">📖 Guide</a><button class="btn" id="themeBtn">☀ Light</button></div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <p style="margin-top:0">A <b>repeating tile</b> is a small pattern of logs, trees and walkways that you copy side by side as your farm grows. The planner's optimizer was run many times for every tile size from 2×2 to 7×7. Each result was scored by its <b>gold per square of land per day</b>, with copies of the tile on every side, so tiles of different sizes compare fairly. Two walkway rules were tested:</p>
+    <ul>
+      <li><span class="legend" style="display:inline;margin:0"><i style="background:var(--series-1)"></i></span><b>Default walkways:</b> walkways must run off the tile and join the next copy in at least one direction.</li>
+      <li><span class="legend" style="display:inline;margin:0"><i style="background:var(--series-2)"></i></span><b>One connected network:</b> walkways must join up both across and down, so every tile connects to every other.</li>
+    </ul>
+    <p class="muted" id="settingsLine"></p>
+  </section>
+
+  <div class="stats" id="stats"></div>
+
+  <section class="card" id="heat">
+    <h2>Best gold per square, by tile size</h2>
+    <p class="lede">Each square is one tile size: width across, height down. The number is the best result of its runs, in gold per square of land per day. Outlined squares are the best size (and exact ties) for that walkway rule. Hover for more.</p>
+    <div class="heatpair" id="heatpair"></div>
+    <div class="hleg" id="hleg"></div>
+  </section>
+
+  <section class="card" id="spread">
+    <h2>How consistent was the search?</h2>
+    <p class="lede">Every run for every size, best size first. Each dot is one run, the gray line spans its worst to best result, and the dark tick marks the average. Small tiles found the same answer every time. Big tiles spread out, because a 3-second search can't cover their many possible layouts.</p>
+    <div class="controls">
+      <div class="seg" role="radiogroup" aria-label="Walkway rule">
+        <label><input type="radio" name="spreadScen" value="default" checked><span>Default walkways</span></label>
+        <label><input type="radio" name="spreadScen" value="connected"><span>One connected network</span></label>
+      </div>
+      <label class="chk"><input type="checkbox" id="spreadZoom" checked>Zoom in on sizes near the best</label>
+    </div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <section class="card" id="area">
+    <h2>Smaller tiles came out ahead</h2>
+    <p class="lede">Best gold per square against the tile's size in squares. Rotated sizes (like 3×4 and 4×3) sit on the same point.</p>
+    <div class="legend" id="scatLegend"></div>
+    <div class="scat" id="scat"></div>
+  </section>
+
+  <section class="card find" id="findings"></section>
+
+  <section class="card">
+    <details>
+      <summary>All numbers as a table</summary>
+      <div class="scroll"><table id="numtable"></table></div>
+    </details>
+  </section>
+
+  <section class="card" id="gallery">
+    <h2>Best layout for every size</h2>
+    <p class="lede">The highest-earning layout found for each tile size. Turn on the copies to see how a tile joins its neighbors: the center tile is the pattern, and gold lines mark the tile edges.</p>
+    <div class="controls">
+      <div class="seg" role="radiogroup" aria-label="Walkway rule">
+        <label><input type="radio" name="galScen" value="default" checked><span>Default walkways</span></label>
+        <label><input type="radio" name="galScen" value="connected"><span>One connected network</span></label>
+      </div>
+      <label class="chk">Sort by
+        <select id="galSort"><option value="best">Most gold per square</option><option value="size">Tile size</option></select>
+      </label>
+      <label class="chk"><input type="checkbox" id="galCopies">Show surrounding copies</label>
+    </div>
+    <div class="legend">
+      <span><i class="sq" style="background:var(--c-path)"></i>Walkway</span>
+      <span><i class="sq" style="background:var(--c-log)"></i>Mushroom Log</span>
+      <span><i class="sq" style="background:var(--c-oak)"></i>Oak</span>
+      <span><i class="sq" style="background:var(--c-maple)"></i>Maple</span>
+      <span><i class="sq" style="background:var(--c-pine)"></i>Pine</span>
+    </div>
+    <div class="lays" id="lays"></div>
+  </section>
+
+  <section class="card" id="method"></section>
+</main>
+<div class="tip" id="tip" hidden></div>
+
+<script id="study-data" type="application/json">{"generated":"2026-09-27T12:20:56.281Z","runsPerSize":20,"budgetMs":3000,"maxSize":7,"totalRuns":1440,"settings":{"default":{"wrap":true,"allowed":[2,3,4],"saplings":false,"access":true,"continuous":false,"side":"any","walkOnly":false,"orth":false,"orthTrees":false,"tap":true,"heavy":false,"tapperProf":false,"moss":0,"rain":0,"target":-1,"targetPct":0.5},"connected":{"wrap":true,"allowed":[2,3,4],"saplings":false,"access":true,"continuous":true,"side":"any","walkOnly":true,"orth":false,"orthTrees":false,"tap":true,"heavy":false,"tapperProf":false,"moss":0,"rain":0,"target":-1,"targetPct":0.5}},"scen":{"default":[{"w":3,"h":4,"area":12,"best":79.235,"mean":79.235,"sd":0,"worst":79.235,"bestTile":950.816,"wins":17,"rankBest":1,"rankMean":1,"layout":".LL/.PL/.LL/.LP","logs":6,"oak":0,"maple":0,"pine":2,"walkway":4,"mushGold":910.82,"tapGold":40,"runs":[79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235]},{"w":4,"h":3,"area":12,"best":79.235,"mean":79.235,"sd":0,"worst":79.235,"bestTile":950.816,"wins":2,"rankBest":2,"rankMean":2,"layout":"LLLP/..../LPLL","logs":6,"oak":0,"maple":0,"pine":2,"walkway":4,"mushGold":910.82,"tapGold":40,"runs":[79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235,79.235]},{"w":6,"h":4,"area":24,"best":79.235,"mean":77.848,"sd":0.557,"worst":76.896,"bestTile":1901.631,"wins":1,"rankBest":3,"rankMean":3,"layout":".PL.PL/.LL.LL/.LP.LP/.LL.LL","logs":12,"oak":0,"maple":0,"pine":4,"walkway":8,"mushGold":1821.63,"tapGold":80,"runs":[77.61,77.855,77.855,79.235,77.855,77.61,77.855,77.855,79.235,77.855,77.855,77.855,77.61,77.61,77.855,76.896,77.855,76.896,77.855,77.855]},{"w":6,"h":5,"area":30,"best":78.174,"mean":75.919,"sd":1.936,"worst":72.296,"bestTile":2345.225,"wins":0,"rankBest":4,"rankMean":10,"layout":"....../LP.PLP/LL.LLL/LLLLL./PLPLP.","logs":14,"oak":0,"maple":0,"pine":6,"walkway":10,"mushGold":2225.22,"tapGold":120,"runs":[75.187,75.692,78.174,77.778,78.174,73.375,74.868,74.922,78.174,75.324,75.187,72.296,78.174,77.778,77.778,72.511,75.187,77.778,74.843,75.187]},{"w":6,"h":6,"area":36,"best":77.994,"mean":76.446,"sd":0.892,"worst":75.158,"bestTile":2807.789,"wins":0,"rankBest":5,"rankMean":7,"layout":"PLPLPL/LLLLLL/P....L/L.LLLL/P.PLPL/......","logs":17,"oak":0,"maple":0,"pine":7,"walkway":12,"mushGold":2667.79,"tapGold":140,"runs":[75.782,77.217,77.721,75.778,76.109,77.217,76.121,77.721,76.326,76.121,75.192,75.158,76.121,76.078,76.442,75.873,75.514,76.442,77.994,77.994]},{"w":4,"h":6,"area":24,"best":77.855,"mean":77.64,"sd":0.503,"worst":75.731,"bestTile":1868.522,"wins":0,"rankBest":6,"rankMean":4,"layout":"P..L/L.LL/P.PL/..../PLPL/LLLL","logs":11,"oak":0,"maple":0,"pine":5,"walkway":8,"mushGold":1768.52,"tapGold":100,"runs":[77.61,77.855,76.896,77.855,77.855,77.855,77.855,77.61,77.855,77.855,77.855,77.855,77.855,77.61,77.855,77.855,77.61,77.61,77.855,75.731]},{"w":5,"h":6,"area":30,"best":77.778,"mean":75.403,"sd":1.397,"worst":72.511,"bestTile":2333.338,"wins":0,"rankBest":7,"rankMean":15,"layout":"...LP/.LLLL/.PLLP/.LL../.PLLP/.LLLL","logs":15,"oak":0,"maple":0,"pine":5,"walkway":10,"mushGold":2233.34,"tapGold":100,"runs":[74.415,75.187,73.707,74.187,75.187,77.778,75.187,74.922,75.187,75.324,74.922,77.778,75.324,75.187,75.187,75.324,77.778,77.778,75.187,72.511]},{"w":4,"h":7,"area":28,"best":77.428,"mean":76.194,"sd":1.711,"worst":72.987,"bestTile":2167.98,"wins":0,"rankBest":8,"rankMean":8,"layout":"LLL./PL../LLLL/PLPL/.LLL/..../PLP.","logs":14,"oak":0,"maple":0,"pine":5,"walkway":9,"mushGold":2087.98,"tapGold":80,"runs":[74.33,77.428,77.428,77.428,73.248,77.428,73.758,77.428,77.428,77.428,77.428,77.428,74.708,77.428,72.987,77.428,76.887,74.33,77.428,74.504]},{"w":7,"h":4,"area":28,"best":77.428,"mean":75.829,"sd":1.659,"worst":72.987,"bestTile":2167.98,"wins":0,"rankBest":9,"rankMean":11,"layout":"..LLL../LPLP..P/LLLLL.L/P.LPL.L","logs":14,"oak":0,"maple":0,"pine":5,"walkway":9,"mushGold":2087.98,"tapGold":80,"runs":[74.708,76.887,72.987,77.428,74.504,74.708,74.504,77.428,77.428,77.428,77.428,74.708,74.708,74.33,77.428,77.428,72.987,77.428,74.708,77.428]},{"w":7,"h":6,"area":42,"best":77.029,"mean":75.699,"sd":1.138,"worst":73.228,"bestTile":3235.202,"wins":0,"rankBest":10,"rankMean":12,"layout":"LL.LLLL/LP....P/L..LL.L/LP.PL.P/LL.LL.L/P..PLPL","logs":20,"oak":0,"maple":0,"pine":8,"walkway":14,"mushGold":3075.2,"tapGold":160,"runs":[75.716,73.228,75.627,76.045,76.511,76.056,76.511,73.228,76.209,76.066,76.209,75.716,75.716,76.209,77.029,76.046,76.035,73.228,75.559,77.029]},{"w":2,"h":6,"area":12,"best":76.792,"mean":76.792,"sd":0,"worst":76.792,"bestTile":921.501,"wins":0,"rankBest":11,"rankMean":5,"layout":"PL/LL/../LL/PL/..","logs":6,"oak":0,"maple":0,"pine":2,"walkway":4,"mushGold":881.5,"tapGold":40,"runs":[76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792]},{"w":6,"h":2,"area":12,"best":76.792,"mean":76.792,"sd":0,"worst":76.792,"bestTile":921.501,"wins":0,"rankBest":12,"rankMean":6,"layout":"L.LP.P/L.LL.L","logs":6,"oak":0,"maple":0,"pine":2,"walkway":4,"mushGold":881.5,"tapGold":40,"runs":[76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792,76.792]},{"w":6,"h":7,"area":42,"best":76.542,"mean":75.982,"sd":0.363,"worst":75.249,"bestTile":3214.777,"wins":0,"rankBest":13,"rankMean":9,"layout":"L.LLPL/P.PLLL/....PL/.LP.../PLLL.L/LLPL.L/P.LL.L","logs":20,"oak":0,"maple":0,"pine":8,"walkway":14,"mushGold":3054.78,"tapGold":160,"runs":[76.209,76.046,76.511,75.716,75.249,75.538,76.36,76.209,75.627,76.045,76.045,76.511,75.559,76.046,75.716,76.046,76.046,76.542,76.066,75.559]},{"w":5,"h":7,"area":35,"best":76.121,"mean":73.851,"sd":2.096,"worst":71.545,"bestTile":2664.233,"wins":0,"rankBest":14,"rankMean":19,"layout":"LLLPL/LPLLL/...LP/L.PLL/P.LLL/..P../P...L","logs":16,"oak":0,"maple":0,"pine":7,"walkway":12,"mushGold":2524.23,"tapGold":140,"runs":[76.121,71.718,76.121,76.121,76.121,71.545,72.826,71.718,76.121,71.829,72.826,71.829,76.121,76.121,71.718,71.829,71.718,76.121,75.667,72.826]},{"w":7,"h":5,"area":35,"best":76.121,"mean":74.196,"sd":2.078,"worst":71.545,"bestTile":2664.233,"wins":0,"rankBest":15,"rankMean":18,"layout":".....LP/.PLP.LL/LLLL.PL/PLL..LL/.LP.PLL","logs":16,"oak":0,"maple":0,"pine":7,"walkway":12,"mushGold":2524.23,"tapGold":140,"runs":[71.829,71.829,72.826,76.121,76.121,76.121,76.121,76.121,76.121,75.214,71.829,71.718,72.826,75.667,71.824,76.121,76.121,71.718,76.121,71.545]},{"w":3,"h":6,"area":18,"best":75.835,"mean":74.948,"sd":1.116,"worst":73.616,"bestTile":1365.038,"wins":0,"rankBest":16,"rankMean":16,"layout":"L.P/L.L/P.L/L.L/P.L/L.L","logs":9,"oak":0,"maple":0,"pine":3,"walkway":6,"mushGold":1305.04,"tapGold":60,"runs":[73.616,75.835,75.835,75.835,75.835,75.835,73.616,73.616,75.835,75.835,75.835,73.616,73.616,75.835,73.616,75.835,73.616,73.616,75.835,75.835]},{"w":6,"h":3,"area":18,"best":75.835,"mean":74.726,"sd":1.139,"worst":73.616,"bestTile":1365.038,"wins":0,"rankBest":17,"rankMean":17,"layout":"....../LPLPLL/LLLLLP","logs":9,"oak":0,"maple":0,"pine":3,"walkway":6,"mushGold":1305.04,"tapGold":60,"runs":[73.616,75.835,73.616,73.616,73.616,75.835,73.616,73.616,75.835,75.835,73.616,75.835,75.835,73.616,75.835,73.616,75.835,73.616,75.835,75.835]},{"w":4,"h":5,"area":20,"best":75.506,"mean":75.461,"sd":0.202,"worst":74.604,"bestTile":1510.126,"wins":0,"rankBest":18,"rankMean":14,"layout":"PLPL/..../.PLP/..LL/LLLL","logs":9,"oak":0,"maple":0,"pine":4,"walkway":7,"mushGold":1430.13,"tapGold":80,"runs":[75.506,75.506,74.604,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506]},{"w":5,"h":4,"area":20,"best":75.506,"mean":75.506,"sd":0,"worst":75.506,"bestTile":1510.126,"wins":0,"rankBest":19,"rankMean":13,"layout":".LLLP/.PLLL/.LL.P/.PL..","logs":9,"oak":0,"maple":0,"pine":4,"walkway":7,"mushGold":1430.13,"tapGold":80,"runs":[75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506,75.506]},{"w":7,"h":7,"area":49,"best":75.36,"mean":72.788,"sd":1.302,"worst":70.083,"bestTile":3692.654,"wins":0,"rankBest":20,"rankMean":23,"layout":"L.LLPLL/.....LP/.P.PLLL/LL.LLPL/PL.P.LL/.....PL/P.PLLLL","logs":22,"oak":0,"maple":0,"pine":10,"walkway":17,"mushGold":3492.65,"tapGold":200,"runs":[73.246,73.246,70.805,73.246,73.246,73.246,73.246,70.805,73.211,73.246,73.246,70.083,73.246,73.246,73.246,73.211,70.083,73.246,73.246,75.36]},{"w":5,"h":5,"area":25,"best":73.853,"mean":73.095,"sd":1.351,"worst":70.577,"bestTile":1846.327,"wins":0,"rankBest":21,"rankMean":22,"layout":"P.LLL/..LP./.PLLL/.LLLP/..PL.","logs":11,"oak":0,"maple":0,"pine":5,"walkway":9,"mushGold":1746.33,"tapGold":100,"runs":[73.853,70.577,73.853,73.853,73.853,73.853,73.853,73.853,73.853,73.853,73.853,70.984,73.853,73.853,70.984,70.984,73.853,70.577,73.853,73.853]},{"w":2,"h":3,"area":6,"best":73.56,"mean":73.56,"sd":0,"worst":73.56,"bestTile":441.357,"wins":0,"rankBest":22,"rankMean":20,"layout":"LP/LL/..","logs":3,"oak":0,"maple":0,"pine":1,"walkway":2,"mushGold":421.36,"tapGold":20,"runs":[73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56]},{"w":3,"h":2,"area":6,"best":73.56,"mean":73.56,"sd":0,"worst":73.56,"bestTile":441.357,"wins":0,"rankBest":23,"rankMean":21,"layout":"LL./PL.","logs":3,"oak":0,"maple":0,"pine":1,"walkway":2,"mushGold":421.36,"tapGold":20,"runs":[73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56,73.56]},{"w":2,"h":7,"area":14,"best":72.45,"mean":72.45,"sd":0,"worst":72.45,"bestTile":1014.293,"wins":0,"rankBest":24,"rankMean":24,"layout":"LL/LP/../P./LL/LP/..","logs":6,"oak":0,"maple":0,"pine":3,"walkway":5,"mushGold":954.29,"tapGold":60,"runs":[72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45]},{"w":7,"h":2,"area":14,"best":72.45,"mean":72.45,"sd":0,"worst":72.45,"bestTile":1014.293,"wins":0,"rankBest":25,"rankMean":25,"layout":"L.LLP.L/P.PL..L","logs":6,"oak":0,"maple":0,"pine":3,"walkway":5,"mushGold":954.29,"tapGold":60,"runs":[72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45,72.45]},{"w":5,"h":3,"area":15,"best":72.269,"mean":72.269,"sd":0,"worst":72.269,"bestTile":1084.03,"wins":0,"rankBest":26,"rankMean":26,"layout":"LL.../LP.LL/LL.PL","logs":8,"oak":0,"maple":0,"pine":2,"walkway":5,"mushGold":1044.03,"tapGold":40,"runs":[72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269]},{"w":3,"h":5,"area":15,"best":72.269,"mean":72.269,"sd":0,"worst":72.269,"bestTile":1084.03,"wins":0,"rankBest":27,"rankMean":27,"layout":"L.L/P.L/.../LLP/LLL","logs":8,"oak":0,"maple":0,"pine":2,"walkway":5,"mushGold":1044.03,"tapGold":40,"runs":[72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269,72.269]},{"w":4,"h":4,"area":16,"best":71.902,"mean":71.902,"sd":0,"worst":71.902,"bestTile":1150.436,"wins":0,"rankBest":28,"rankMean":28,"layout":".LPL/PL.L/..../PLLL","logs":7,"oak":0,"maple":0,"pine":3,"walkway":5,"mushGold":1090.44,"tapGold":60,"runs":[71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902,71.902]},{"w":3,"h":7,"area":21,"best":71.233,"mean":71.233,"sd":0,"worst":71.233,"bestTile":1495.9,"wins":0,"rankBest":29,"rankMean":29,"layout":"LL./PL./LL./PL./LL./PL./LL.","logs":11,"oak":0,"maple":0,"pine":3,"walkway":7,"mushGold":1435.9,"tapGold":60,"runs":[71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233]},{"w":7,"h":3,"area":21,"best":71.233,"mean":71.233,"sd":0,"worst":71.233,"bestTile":1495.9,"wins":0,"rankBest":30,"rankMean":30,"layout":"LLLLLLL/LPLPLPL/.......","logs":11,"oak":0,"maple":0,"pine":3,"walkway":7,"mushGold":1435.9,"tapGold":60,"runs":[71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233,71.233]},{"w":2,"h":4,"area":8,"best":67.845,"mean":67.845,"sd":0,"worst":67.845,"bestTile":542.756,"wins":0,"rankBest":31,"rankMean":31,"layout":"P./../LL/LL","logs":4,"oak":0,"maple":0,"pine":1,"walkway":3,"mushGold":522.76,"tapGold":20,"runs":[67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845]},{"w":4,"h":2,"area":8,"best":67.845,"mean":67.845,"sd":0,"worst":67.845,"bestTile":542.756,"wins":0,"rankBest":32,"rankMean":32,"layout":"..LL/.PLL","logs":4,"oak":0,"maple":0,"pine":1,"walkway":3,"mushGold":522.76,"tapGold":20,"runs":[67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845,67.845]},{"w":2,"h":5,"area":10,"best":67.59,"mean":67.59,"sd":0,"worst":67.59,"bestTile":675.904,"wins":0,"rankBest":33,"rankMean":33,"layout":"LP/../P./L./LL","logs":4,"oak":0,"maple":0,"pine":2,"walkway":4,"mushGold":635.9,"tapGold":40,"runs":[67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59]},{"w":5,"h":2,"area":10,"best":67.59,"mean":67.59,"sd":0,"worst":67.59,"bestTile":675.904,"wins":0,"rankBest":34,"rankMean":34,"layout":".LLLP/.PL..","logs":4,"oak":0,"maple":0,"pine":2,"walkway":4,"mushGold":635.9,"tapGold":40,"runs":[67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59,67.59]},{"w":3,"h":3,"area":9,"best":63.122,"mean":63.122,"sd":0,"worst":63.122,"bestTile":568.097,"wins":0,"rankBest":35,"rankMean":35,"layout":"LPL/LLL/...","logs":5,"oak":0,"maple":0,"pine":1,"walkway":3,"mushGold":548.1,"tapGold":20,"runs":[63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122,63.122]},{"w":2,"h":2,"area":4,"best":44.995,"mean":44.995,"sd":0,"worst":44.995,"bestTile":179.979,"wins":0,"rankBest":36,"rankMean":36,"layout":"P./L.","logs":1,"oak":0,"maple":0,"pine":1,"walkway":2,"mushGold":159.98,"tapGold":20,"runs":[44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995,44.995]}],"connected":[{"w":6,"h":7,"area":42,"best":69.448,"mean":68.667,"sd":0.712,"worst":66.091,"bestTile":2916.813,"wins":7,"rankBest":1,"rankMean":1,"layout":"PLL.PL/LLP.LL/PL..../LL.LPL/PL.LLL/....PL/.LP...","logs":18,"oak":0,"maple":0,"pine":8,"walkway":16,"mushGold":2756.81,"tapGold":160,"runs":[68.465,68.445,68.486,68.486,69.448,68.496,69.448,68.486,69.448,68.496,68.727,68.486,68.496,69.014,66.091,69.15,69.15,69.014,68.496,69.014]},{"w":7,"h":6,"area":42,"best":69.448,"mean":68.45,"sd":0.96,"worst":65.678,"bestTile":2916.813,"wins":7,"rankBest":2,"rankMean":3,"layout":"P....PL/L.LLLLL/..PLPLP/.LLL.LL/.PLP.LP/..LL...","logs":18,"oak":0,"maple":0,"pine":8,"walkway":16,"mushGold":2756.81,"tapGold":160,"runs":[68.898,68.445,68.465,69.15,68.465,68.496,68.465,69.15,69.014,65.678,66.091,68.727,68.02,68.465,69.15,68.465,69.448,68.496,68.465,69.448]},{"w":6,"h":6,"area":36,"best":69.447,"mean":68.604,"sd":0.663,"worst":67.224,"bestTile":2500.079,"wins":5,"rankBest":3,"rankMean":2,"layout":".PL.LP/.LLLLL/.PLPLP/....../.PL.LP/.LL.LL","logs":15,"oak":0,"maple":0,"pine":7,"walkway":14,"mushGold":2360.08,"tapGold":140,"runs":[67.963,67.46,68.086,68.977,67.224,68.494,68.977,69.447,68.977,68.977,69.447,67.963,68.977,68.977,68.977,68.977,68.494,69.447,67.73,68.507]},{"w":7,"h":7,"area":49,"best":68.88,"mean":66.964,"sd":1.32,"worst":65.043,"bestTile":3375.14,"wins":1,"rankBest":4,"rankMean":4,"layout":"L..PL.L/LP....P/L..PLLL/P.LLLPL/L.PLL.L/...LP../LP.LL.P","logs":20,"oak":0,"maple":0,"pine":10,"walkway":19,"mushGold":3175.14,"tapGold":200,"runs":[65.043,67.583,65.177,67.583,67.583,67.583,67.583,67.583,65.043,67.583,67.583,67.583,65.043,65.043,67.583,68.88,65.177,67.583,68.88,67.583]},{"w":5,"h":6,"area":30,"best":67.194,"mean":65.387,"sd":1.095,"worst":64.303,"bestTile":2015.824,"wins":0,"rankBest":5,"rankMean":6,"layout":"PLLP./...../PLLP./LLLL./PL.../LLLL.","logs":13,"oak":0,"maple":0,"pine":5,"walkway":12,"mushGold":1915.82,"tapGold":100,"runs":[64.303,65.435,65.435,64.436,64.303,65.65,64.303,67.194,66.044,64.303,67.194,65.65,65.435,64.303,65.464,64.303,67.194,67.194,65.284,64.303]},{"w":6,"h":5,"area":30,"best":67.194,"mean":65.867,"sd":1.265,"worst":62.912,"bestTile":2015.824,"wins":0,"rankBest":6,"rankMean":5,"layout":"LLLL.L/L.LL.L/L.LP.P/....../LPLP.P","logs":13,"oak":0,"maple":0,"pine":5,"walkway":12,"mushGold":1915.82,"tapGold":100,"runs":[67.194,62.912,67.194,67.194,64.955,67.194,65.435,64.303,65.435,64.303,65.435,67.194,67.194,67.194,65.65,67.194,65.435,65.485,65.004,65.435]},{"w":5,"h":7,"area":35,"best":67.049,"mean":65.205,"sd":1.313,"worst":63.554,"bestTile":2346.719,"wins":0,"rankBest":7,"rankMean":7,"layout":"P.LLL/L.PLL/...LP/.P.../.LLLP/.PLLL/...PL","logs":14,"oak":0,"maple":0,"pine":7,"walkway":14,"mushGold":2206.72,"tapGold":140,"runs":[66.142,67.049,64.662,64.662,63.807,63.554,64.662,63.95,64.662,67.049,67.049,64.662,63.95,67.049,67.049,64.662,63.554,66.595,64.662,64.662]},{"w":7,"h":5,"area":35,"best":67.049,"mean":65.18,"sd":1.299,"worst":63.554,"bestTile":2346.719,"wins":0,"rankBest":8,"rankMean":8,"layout":"LLLP.PL/PLL..LL/.LP.LLL/....PLP/.PL....","logs":14,"oak":0,"maple":0,"pine":7,"walkway":14,"mushGold":2206.72,"tapGold":140,"runs":[64.662,67.049,67.049,64.662,67.049,67.049,64.662,67.049,67.049,64.662,63.95,64.662,64.662,64.662,64.662,63.95,63.95,63.95,63.554,64.662]},{"w":4,"h":6,"area":24,"best":64.329,"mean":63.941,"sd":0.398,"worst":63.553,"bestTile":1543.902,"wins":0,"rankBest":9,"rankMean":9,"layout":".LLL/.PLP/..../.PLP/.LLL/.PL.","logs":9,"oak":0,"maple":0,"pine":5,"walkway":10,"mushGold":1443.9,"tapGold":100,"runs":[63.553,64.329,64.329,63.553,64.329,63.553,64.329,64.329,63.553,64.329,63.553,63.553,64.329,64.329,63.553,63.553,63.553,63.553,64.329,64.329]},{"w":6,"h":4,"area":24,"best":64.329,"mean":63.902,"sd":0.396,"worst":63.553,"bestTile":1543.902,"wins":0,"rankBest":10,"rankMean":10,"layout":"PL.LP./....../PLPLP./LLLLL.","logs":9,"oak":0,"maple":0,"pine":5,"walkway":10,"mushGold":1443.9,"tapGold":100,"runs":[63.553,63.553,64.329,63.553,63.553,64.329,64.329,63.553,64.329,64.329,64.329,63.553,63.553,64.329,63.553,64.329,63.553,64.329,63.553,63.553]},{"w":4,"h":7,"area":28,"best":62.623,"mean":62.564,"sd":0.153,"worst":62.082,"bestTile":1753.436,"wins":0,"rankBest":11,"rankMean":12,"layout":"L.LL/L..P/LP.L/LL.P/LP../..../L.LP","logs":11,"oak":0,"maple":0,"pine":5,"walkway":12,"mushGold":1653.44,"tapGold":100,"runs":[62.082,62.623,62.215,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.393,62.623]},{"w":7,"h":4,"area":28,"best":62.623,"mean":62.591,"sd":0.102,"worst":62.215,"bestTile":1753.436,"wins":0,"rankBest":12,"rankMean":11,"layout":".LLLLLL/.LPLP.P/.LL..../....PLP","logs":11,"oak":0,"maple":0,"pine":5,"walkway":12,"mushGold":1653.44,"tapGold":100,"runs":[62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.623,62.393,62.623,62.623,62.623,62.623,62.623,62.623,62.215,62.623]},{"w":5,"h":5,"area":25,"best":60.351,"mean":60.251,"sd":0.177,"worst":59.952,"bestTile":1508.775,"wins":0,"rankBest":13,"rankMean":13,"layout":"...../LP.PL/LL.LL/.L.LL/.P.PL","logs":10,"oak":0,"maple":0,"pine":4,"walkway":11,"mushGold":1428.77,"tapGold":80,"runs":[60.351,60.351,60.351,60.351,60.351,60.351,60.351,60.351,60.351,60.351,60.351,59.952,59.952,60.351,60.351,60.351,59.952,60.351,59.952,59.952]},{"w":4,"h":5,"area":20,"best":59.735,"mean":59.735,"sd":0,"worst":59.735,"bestTile":1194.71,"wins":0,"rankBest":14,"rankMean":14,"layout":"LLL./.LL./.PLP/..../PLL.","logs":8,"oak":0,"maple":0,"pine":3,"walkway":9,"mushGold":1134.71,"tapGold":60,"runs":[59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735]},{"w":5,"h":4,"area":20,"best":59.735,"mean":59.735,"sd":0,"worst":59.735,"bestTile":1194.71,"wins":0,"rankBest":15,"rankMean":15,"layout":"L.LLL/P..../..PL./P.LLL","logs":8,"oak":0,"maple":0,"pine":3,"walkway":9,"mushGold":1134.71,"tapGold":60,"runs":[59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735,59.735]},{"w":3,"h":6,"area":18,"best":59.054,"mean":59.054,"sd":0,"worst":59.054,"bestTile":1062.966,"wins":0,"rankBest":16,"rankMean":17,"layout":"PL./LL./PL./LL./LP./...","logs":7,"oak":0,"maple":0,"pine":3,"walkway":8,"mushGold":1002.97,"tapGold":60,"runs":[59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054]},{"w":6,"h":3,"area":18,"best":59.054,"mean":59.054,"sd":0,"worst":59.054,"bestTile":1062.966,"wins":0,"rankBest":17,"rankMean":16,"layout":"....../LLPLP./PLLLL.","logs":7,"oak":0,"maple":0,"pine":3,"walkway":8,"mushGold":1002.97,"tapGold":60,"runs":[59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054,59.054]},{"w":3,"h":7,"area":21,"best":58.549,"mean":58.549,"sd":0,"worst":58.549,"bestTile":1229.539,"wins":0,"rankBest":18,"rankMean":18,"layout":"LL./LP./LL./LP./LL./LP./...","logs":9,"oak":0,"maple":0,"pine":3,"walkway":9,"mushGold":1169.54,"tapGold":60,"runs":[58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549]},{"w":7,"h":3,"area":21,"best":58.549,"mean":58.549,"sd":0,"worst":58.549,"bestTile":1229.539,"wins":0,"rankBest":19,"rankMean":19,"layout":"LLLLLL./LPLPLP./.......","logs":9,"oak":0,"maple":0,"pine":3,"walkway":9,"mushGold":1169.54,"tapGold":60,"runs":[58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549,58.549]},{"w":3,"h":5,"area":15,"best":55.804,"mean":55.804,"sd":0,"worst":55.804,"bestTile":837.061,"wins":0,"rankBest":20,"rankMean":20,"layout":".../P.L/L.L/L.L/L.P","logs":6,"oak":0,"maple":0,"pine":2,"walkway":7,"mushGold":797.06,"tapGold":40,"runs":[55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804]},{"w":5,"h":3,"area":15,"best":55.804,"mean":55.804,"sd":0,"worst":55.804,"bestTile":837.061,"wins":0,"rankBest":21,"rankMean":21,"layout":"...../LLL.P/LLP.L","logs":6,"oak":0,"maple":0,"pine":2,"walkway":7,"mushGold":797.06,"tapGold":40,"runs":[55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804,55.804]},{"w":3,"h":4,"area":12,"best":52.775,"mean":52.775,"sd":0,"worst":52.775,"bestTile":633.302,"wins":0,"rankBest":22,"rankMean":22,"layout":".LL/.PL/.../.LP","logs":4,"oak":0,"maple":0,"pine":2,"walkway":6,"mushGold":593.3,"tapGold":40,"runs":[52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775]},{"w":4,"h":3,"area":12,"best":52.775,"mean":52.775,"sd":0,"worst":52.775,"bestTile":633.302,"wins":0,"rankBest":23,"rankMean":23,"layout":"LLP./PLL./....","logs":4,"oak":0,"maple":0,"pine":2,"walkway":6,"mushGold":593.3,"tapGold":40,"runs":[52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775,52.775]},{"w":4,"h":4,"area":16,"best":50.83,"mean":50.83,"sd":0,"worst":50.83,"bestTile":813.281,"wins":0,"rankBest":24,"rankMean":24,"layout":"P.../..P./LLL./LLP.","logs":5,"oak":0,"maple":0,"pine":3,"walkway":8,"mushGold":753.28,"tapGold":60,"runs":[50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83,50.83]},{"w":3,"h":3,"area":9,"best":39.532,"mean":39.532,"sd":0,"worst":39.532,"bestTile":355.791,"wins":0,"rankBest":25,"rankMean":25,"layout":"LL./LP./...","logs":3,"oak":0,"maple":0,"pine":1,"walkway":5,"mushGold":335.79,"tapGold":20,"runs":[39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532,39.532]},{"w":2,"h":7,"area":14,"best":38.138,"mean":38.138,"sd":0,"worst":38.138,"bestTile":533.937,"wins":0,"rankBest":26,"rankMean":26,"layout":".L/.P/.L/../.L/.P/.L","logs":4,"oak":0,"maple":0,"pine":2,"walkway":8,"mushGold":493.94,"tapGold":40,"runs":[38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138]},{"w":7,"h":2,"area":14,"best":38.138,"mean":38.138,"sd":0,"worst":38.138,"bestTile":533.937,"wins":0,"rankBest":27,"rankMean":27,"layout":"......./LPL.LPL","logs":4,"oak":0,"maple":0,"pine":2,"walkway":8,"mushGold":493.94,"tapGold":40,"runs":[38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138,38.138]},{"w":2,"h":6,"area":12,"best":37.437,"mean":37.437,"sd":0,"worst":37.437,"bestTile":449.239,"wins":0,"rankBest":28,"rankMean":28,"layout":".L/.P/.L/../.L/.P","logs":3,"oak":0,"maple":0,"pine":2,"walkway":7,"mushGold":409.24,"tapGold":40,"runs":[37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437]},{"w":6,"h":2,"area":12,"best":37.437,"mean":37.437,"sd":0,"worst":37.437,"bestTile":449.239,"wins":0,"rankBest":29,"rankMean":29,"layout":"....../LPL.LP","logs":3,"oak":0,"maple":0,"pine":2,"walkway":7,"mushGold":409.24,"tapGold":40,"runs":[37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437,37.437]},{"w":2,"h":4,"area":8,"best":33.371,"mean":33.371,"sd":0,"worst":33.371,"bestTile":266.969,"wins":0,"rankBest":30,"rankMean":30,"layout":"../.L/.P/.L","logs":2,"oak":0,"maple":0,"pine":1,"walkway":5,"mushGold":246.97,"tapGold":20,"runs":[33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371]},{"w":4,"h":2,"area":8,"best":33.371,"mean":33.371,"sd":0,"worst":33.371,"bestTile":266.969,"wins":0,"rankBest":31,"rankMean":31,"layout":"L.PL/....","logs":2,"oak":0,"maple":0,"pine":1,"walkway":5,"mushGold":246.97,"tapGold":20,"runs":[33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371,33.371]},{"w":2,"h":5,"area":10,"best":32.575,"mean":32.575,"sd":0,"worst":32.575,"bestTile":325.755,"wins":0,"rankBest":32,"rankMean":32,"layout":"P./../P./L./L.","logs":2,"oak":0,"maple":0,"pine":2,"walkway":6,"mushGold":285.75,"tapGold":40,"runs":[32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575]},{"w":5,"h":2,"area":10,"best":32.575,"mean":32.575,"sd":0,"worst":32.575,"bestTile":325.755,"wins":0,"rankBest":33,"rankMean":33,"layout":"PLLP./.....","logs":2,"oak":0,"maple":0,"pine":2,"walkway":6,"mushGold":285.75,"tapGold":40,"runs":[32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575,32.575]},{"w":2,"h":3,"area":6,"best":23.914,"mean":23.914,"sd":0,"worst":23.914,"bestTile":143.484,"wins":0,"rankBest":34,"rankMean":34,"layout":"P./L./..","logs":1,"oak":0,"maple":0,"pine":1,"walkway":4,"mushGold":123.48,"tapGold":20,"runs":[23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914]},{"w":3,"h":2,"area":6,"best":23.914,"mean":23.914,"sd":0,"worst":23.914,"bestTile":143.484,"wins":0,"rankBest":35,"rankMean":35,"layout":"PL./...","logs":1,"oak":0,"maple":0,"pine":1,"walkway":4,"mushGold":123.48,"tapGold":20,"runs":[23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914,23.914]},{"w":2,"h":2,"area":4,"best":5.556,"mean":5.556,"sd":0,"worst":5.556,"bestTile":22.222,"wins":0,"rankBest":36,"rankMean":36,"layout":"M./..","logs":0,"oak":0,"maple":1,"pine":0,"walkway":3,"mushGold":0,"tapGold":22.22,"runs":[5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556,5.556]}]}}</script>
+<script>
+const D = JSON.parse(document.getElementById('study-data').textContent);
+const $ = id => document.getElementById(id);
+const SCEN = {
+  default: { name: 'Default walkways', short: 'Default', series: 'var(--series-1)' },
+  connected: { name: 'One connected network', short: 'Connected', series: 'var(--series-2)' },
+};
+const TIE = 0.01; // results closer than this count as a tie
+const f1 = v => v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const f0 = v => Math.round(v).toLocaleString();
+const sz = r => `${r.w}×${r.h}`;
+const list = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+const isDark = () => document.documentElement.dataset.theme !== 'light';
+
+function winners(s) {
+  const arr = D.scen[s], mx = Math.max(...arr.map(r => r.best));
+  return arr.filter(r => mx - r.best < TIE).sort((a, b) => a.area - b.area || a.w - b.w);
+}
+
+// ---- tooltip ----
+const tip = $('tip');
+function showTip(html, ev) { tip.innerHTML = html; tip.hidden = false; moveTip(ev); }
+function moveTip(ev) {
+  if (tip.hidden) return;
+  const r = tip.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - 14;
+  tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+}
+function bindTips(root, sel, html) {
+  root.querySelectorAll(sel).forEach(el => {
+    const h = () => html(el);
+    el.addEventListener('pointerenter', ev => showTip(h(), ev));
+    el.addEventListener('pointermove', moveTip);
+    el.addEventListener('pointerleave', () => { tip.hidden = true; });
+    el.addEventListener('pointerdown', ev => showTip(h(), ev));
+  });
+}
+const sizeTip = (s, r) => `<b>${sz(r)} tile · ${SCEN[s].name}</b>${r.area} squares, ${r.runs.length} runs<br>
+  Best ${f1(r.best)}g · average ${f1(r.mean)}g · worst ${f1(r.worst)}g per square per day<br>
+  Best tile earns ${f0(r.bestTile)}g per day with ${r.logs} logs<br>Rank ${r.rankBest} of ${D.scen[s].length}`;
+
+// ---- stat tiles ----
+function renderStats() {
+  const wd = winners('default'), wc = winners('connected');
+  const tieNote = w => w.length > 1 ? `Tied with ${list(w.slice(1).map(sz))}` : 'No ties';
+  const nSizes = D.scen.default.length;
+  const stat = (k, v, s) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  $('stats').innerHTML =
+    stat('Best tile, default walkways', `${sz(wd[0])} · ${f1(wd[0].best)}g`, `per square per day. ${tieNote(wd)}.`) +
+    stat('Best tile, one connected network', `${sz(wc[0])} · ${f1(wc[0].best)}g`, `per square per day. ${tieNote(wc)}.`) +
+    stat('Cost of connecting every walkway', `${Math.round((1 - wc[0].best / wd[0].best) * 100)}%`, 'less gold per square than the default rule') +
+    stat('Runs', D.totalRuns.toLocaleString(), `${nSizes} sizes × ${D.runsPerSize} runs × 2 rules, ${D.budgetMs / 1000} s each`);
+}
+
+// ---- heatmaps (sequential blue, shared scale) ----
+const RAMP_LIGHT = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b'];
+const RAMP_DARK = ['#123a70', '#184f95', '#256abf', '#2a78d6', '#5598e7', '#86b6ef', '#cde2fb'];
+const HMIN = 40, HMAX = 80;
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+function rampAt(t) {
+  const st = isDark() ? RAMP_DARK : RAMP_LIGHT, x = Math.max(0, Math.min(1, t)) * (st.length - 1), i = Math.min(st.length - 2, Math.floor(x)), u = x - i;
+  const a = hex(st[i]), b = hex(st[i + 1]);
+  return a.map((v, k) => Math.round(v + (b[k] - v) * u));
+}
+function inkFor(rgb) {
+  const L = rgb.map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
+  return (0.2126 * L[0] + 0.7152 * L[1] + 0.0722 * L[2]) > 0.3 ? '#0e1116' : '#ffffff';
+}
+function renderHeat() {
+  const sizes = [2, 3, 4, 5, 6, 7];
+  $('heatpair').innerHTML = Object.keys(SCEN).map(s => {
+    const arr = D.scen[s], mx = Math.max(...arr.map(r => r.best)), at = (w, h) => arr.find(r => r.w === w && r.h === h);
+    let g = `<div class="ax"></div>` + sizes.map(w => `<div class="ax">${w}</div>`).join('');
+    for (const h of sizes) {
+      g += `<div class="ax">${h}</div>`;
+      for (const w of sizes) {
+        const r = at(w, h), c = rampAt((r.best - HMIN) / (HMAX - HMIN));
+        g += `<div class="hc${mx - r.best < TIE ? ' top' : ''}" data-s="${s}" data-w="${w}" data-h="${h}" style="background:rgb(${c});color:${inkFor(c)}">${f1(r.best)}</div>`;
+      }
+    }
+    return `<figure class="heat" style="margin:0"><figcaption><span class="legend" style="display:inline;margin:0"><i style="background:${SCEN[s].series}"></i></span>${SCEN[s].name}</figcaption>
+      <div class="axtitle">Tile width →</div><div class="hgrid" role="img" aria-label="${SCEN[s].name}: best gold per square by tile width and height">${g}</div>
+      <div class="axtitle" style="margin-left:0">Tile height runs down the left side</div></figure>`;
+  }).join('');
+  bindTips($('heatpair'), '.hc', el => {
+    const s = el.dataset.s, r = D.scen[s].find(x => x.w === +el.dataset.w && x.h === +el.dataset.h);
+    return sizeTip(s, r);
+  });
+  const st = isDark() ? RAMP_DARK : RAMP_LIGHT;
+  $('hleg').innerHTML = `<span>Gold per square per day</span><div><div class="bar" style="background:linear-gradient(90deg,${st.join(',')})"></div>
+    <div class="ticks"><span>≤${HMIN}</span><span>50</span><span>60</span><span>70</span><span>${HMAX}</span></div></div>`;
+}
+
+// ---- strip chart ----
+function niceRange(lo, hi) {
+  const step = hi - lo > 30 ? 10 : 5;
+  return { lo: Math.floor(lo / step) * step, hi: Math.ceil(hi / step) * step, step };
+}
+function renderStrip() {
+  const s = document.querySelector('input[name=spreadScen]:checked').value;
+  const all = D.scen[s].slice().sort((a, b) => b.best - a.best || a.area - b.area);
+  const mx = all[0].best, zoom = $('spreadZoom').checked;
+  // Zoomed: only sizes whose best is within ~12g of the top, so the differences that matter are visible
+  const cut = zoom ? Math.floor((mx - 12) / 5) * 5 : -Infinity;
+  const arr = all.filter(r => r.best >= cut), hidden = all.length - arr.length;
+  const { lo, hi, step } = zoom ? { lo: cut, hi: Math.ceil(mx / 5) * 5, step: 5 } : niceRange(Math.min(...arr.map(r => r.worst)), mx);
+  const X = v => (Math.max(0, (v - lo) / (hi - lo)) * 100).toFixed(2) + '%';
+  let h = '<div class="gl">';
+  for (let v = lo; v <= hi; v += step) h += `<span style="left:${X(v)}"></span>`;
+  h += '</div>';
+  for (const r of arr) {
+    const k = D.scen[s].indexOf(r);
+    h += `<div class="lab">${sz(r)}</div><div class="trk" style="--series:${SCEN[s].series}">
+      <span class="rng" style="left:${X(r.worst)};width:calc(${X(r.best)} - ${X(r.worst)})"></span>
+      ${r.runs.map((v, i) => `<span class="dot" data-k="${k}" data-i="${i}" style="left:${X(v)};top:calc(50% + ${((i % 5) - 2) * 2}px)"></span>`).join('')}
+      <span class="mean" style="left:${X(r.mean)}"></span></div><div class="val">${f1(r.best)}</div>`;
+  }
+  h += `<div></div><div class="ticks">${Array.from({ length: (hi - lo) / step + 1 }, (_, j) => `<span style="left:${X(lo + j * step)}">${lo + j * step}</span>`).join('')}</div><div></div>`;
+  h += `<div></div><div class="xt">Gold per square per day (right column: best run)${hidden ? `. ${hidden} sizes whose best is under ${lo}g are hidden (see the table). Runs under ${lo}g are drawn at the left edge.` : ''}</div><div></div>`;
+  $('strip').innerHTML = h;
+  bindTips($('strip'), '.dot', el => {
+    const r = D.scen[s][+el.dataset.k], i = +el.dataset.i;
+    return `<b>${sz(r)} · run ${i + 1} of ${r.runs.length}</b>${f1(r.runs[i])}g per square per day<br><span class="muted">Average ${f1(r.mean)}g · best ${f1(r.best)}g</span>`;
+  });
+}
+
+// ---- scatter: best vs area ----
+function renderScatter() {
+  const xmax = 50, ymax = 80, X = v => (v / xmax * 100) + '%', Y = v => (100 - v / ymax * 100) + '%';
+  let h = '<div class="plot">';
+  for (let v = 0; v <= ymax; v += 20) h += `<div class="gy" style="top:${Y(v)}"></div><div class="ty" style="top:${Y(v)}">${v}</div>`;
+  for (let v = 10; v <= xmax; v += 10) h += `<div class="gx" style="left:${X(v)}"></div>`;
+  for (let v = 0; v <= xmax; v += 10) h += `<div class="tx" style="left:${X(v)}">${v}</div>`;
+  for (const s of Object.keys(SCEN)) {
+    const groups = new Map();
+    for (const r of D.scen[s]) { const key = r.area + ':' + r.best.toFixed(2); (groups.get(key) || groups.set(key, []).get(key)).push(r); }
+    for (const [key, rs] of groups) h += `<span class="pt" data-s="${s}" data-key="${key}" style="--series:${SCEN[s].series};left:${X(rs[0].area)};top:${Y(rs[0].best)}"></span>`;
+    const w = winners(s)[0];
+    h += `<span class="dl" style="left:${X(w.area)};top:${Y(w.best)}">${sz(w)}</span>`;
+  }
+  h += `<div class="axl" style="left:50%;bottom:-2.7em;transform:translateX(-50%)">Tile size in squares</div></div>`;
+  $('scat').innerHTML = h;
+  $('scatLegend').innerHTML = Object.keys(SCEN).map(s => `<span><i style="background:${SCEN[s].series}"></i>${SCEN[s].name}</span>`).join('') + '<span>Vertical axis: best gold per square per day</span>';
+  bindTips($('scat'), '.pt', el => {
+    const s = el.dataset.s, rs = D.scen[s].filter(r => r.area + ':' + r.best.toFixed(2) === el.dataset.key);
+    return `<b>${list(rs.map(sz))} · ${SCEN[s].name}</b>${rs[0].area} squares<br>Best ${f1(rs[0].best)}g per square per day`;
+  });
+}
+
+// ---- findings + table + method ----
+function renderText() {
+  const wd = winners('default'), wc = winners('connected'), d0 = wd[0], c0 = wc[0];
+  const cost = Math.round((1 - c0.best / d0.best) * 100);
+  const multiples = wd.filter(r => r.area > d0.area).map(sz);
+  const rot = (s) => D.scen[s].every(r => { const t = D.scen[s].find(x => x.w === r.h && x.h === r.w); return Math.abs(t.best - r.best) < 1.5; });
+  const big = D.scen.default.filter(r => r.area >= 30), small = D.scen.default.filter(r => r.area <= 12);
+  const avgGap = a => a.reduce((t, r) => t + (r.best - r.mean), 0) / a.length;
+  const walkPct = r => Math.round(r.walkway / r.area * 100);
+  $('findings').innerHTML = `<h2>What the data says</h2>
+    <h3>With default walkways, a small ${sz(d0)} tile is best</h3>
+    <p>The ${sz(d0)} tile earned <b>${f1(d0.best)}g per square per day</b>, more than any other size, and ${d0.sd < 0.001 ? `all ${d0.runs.length} of its runs found exactly the same layout` : `its runs averaged ${f1(d0.mean)}g`}. ${multiples.length ? `The only sizes that matched it were ${list(multiples)}, which are just copies of it side by side.` : ''} No bigger tile beat it in any run.</p>
+    ${['3×4', '4×3'].includes(sz(d0)) ? `<p>It works because the walkway runs down one side of the tile. When copies sit side by side, that makes a path every third column, and every log touches a path. Four of its six logs have 10 Pines in range, which guarantees the maximum 5 mushrooms per harvest. The other two have 8.</p>` : ''}
+    <h3>Connecting every walkway costs about ${cost}%</h3>
+    <p>With one connected network, the best was <b>${sz(c0)}</b> at ${f1(c0.best)}g per square per day${wc.length > 1 ? `, tied with ${list(wc.slice(1).map(sz))}` : ''}. For every tile to link to every other, walkways have to run both across and down. That takes ${walkPct(c0)}% of the ${sz(c0)} tile, against ${walkPct(d0)}% of the ${sz(d0)} tile. Small tiles can't afford a path in both directions, so the best connected tiles are bigger.</p>
+    <h3>Turning a tile doesn't change it</h3>
+    <p>${rot('default') && rot('connected') ? 'Every size scored the same as its rotation, give or take the search\'s run-to-run spread (3×4 and 4×3, for example).' : 'Most sizes scored close to their rotation.'} That's expected, since a turned tile is the same pattern. It's a useful check that the scoring treats rows and columns alike.</p>
+    <h3>Bigger tiles need longer searches</h3>
+    <p>For tiles of 12 squares or fewer, the best run beat the average by ${f1(avgGap(small))}g. For tiles of 30 squares or more, the gap was ${f1(avgGap(big))}g. A bigger tile can always repeat a smaller pattern inside it, so its true best is never lower. Its lower scores here come from a 3-second search, not from the size itself. When you design a big tile in the planner, use the Thorough search time and run it more than once.</p>
+    <h3>What these results don't cover</h3>
+    <p>These results use one set of settings (below). Mystic trees, Heavy Tappers, moss, console mode or a mushroom target would change the answer.</p>`;
+
+  const nt = $('numtable');
+  const rows = D.scen.default.slice().sort((a, b) => a.area - b.area || a.w - b.w);
+  nt.className = 'stack';
+  nt.innerHTML = `<thead><tr><th>Size</th><th class="hide-sm">Squares</th><th>Default best</th><th>Default average</th><th>Default worst</th><th>Connected best</th><th>Connected average</th><th>Connected worst</th></tr></thead><tbody>` +
+    rows.map(r => {
+      const c = D.scen.connected.find(x => x.w === r.w && x.h === r.h);
+      return `<tr class="${wd.includes(r) || wc.includes(c) ? 'win' : ''}"><td>${sz(r)} <span class="muted" style="font-weight:400">· ${r.area} squares</span></td><td class="hide-sm">${r.area}</td><td>${f1(r.best)}</td><td>${f1(r.mean)}</td><td>${f1(r.worst)}</td><td>${f1(c.best)}</td><td>${f1(c.mean)}</td><td>${f1(c.worst)}</td></tr>`;
+    }).join('') + '</tbody><caption style="caption-side:bottom;text-align:left;padding-top:8px;color:var(--muted);font-size:12.5px">Gold per square per day. Bold rows include a best size.</caption>';
+
+  labelTables(nt);
+  const st = D.settings.default, trees = { 2: 'Oak', 3: 'Maple', 4: 'Pine', 5: 'Mystic', 6: 'Mahogany' };
+  $('settingsLine').textContent = `Settings for every run: ${list(st.allowed.map(c => trees[c]))} allowed; ${st.saplings ? 'saplings allowed; ' : ''}${st.tap ? `trees tapped with a ${st.heavy ? 'Heavy Tapper' : 'regular Tapper'}${st.tapperProf ? ' and the Tapper profession' : ''}` : 'no tapping'}; ${st.moss ? Math.round(st.moss * 100) + '% moss' : 'no moss'}; ${st.rain ? Math.round(st.rain * 100) + '% rain' : 'no rain'}; ${st.target < 0 ? 'no mushroom target' : 'a mushroom target'}${st.orth ? '; console mode' : ''}.`;
+  $('method').innerHTML = `<h2>How the data was made</h2>
+    <p>A script loaded the planner's own model and optimizer and ran them outside the browser, so every number here is what the planner itself would find. For each of the ${D.scen.default.length} sizes from 2×2 to ${D.maxSize}×${D.maxSize} and each walkway rule, it ran ${D.runsPerSize} independent searches of ${D.budgetMs / 1000} seconds each (${D.totalRuns.toLocaleString()} runs in total). A tile's score is its gold per day with copies on every side, divided by its number of squares. Every result was checked for unreachable logs and broken tree-spacing rules, and none had either.</p>
+    <p class="muted">${$('settingsLine').textContent} Generated ${new Date(D.generated).toLocaleString()}.</p>`;
+}
+
+// Copy each column's heading onto its cells, for the stacked phone layout
+function labelTables(root) {
+  root.querySelectorAll('table.stack').forEach(t => {
+    const heads = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    t.querySelectorAll('tbody tr, tfoot tr').forEach(tr => [...tr.children].forEach((td, i) => { if (heads[i] && !td.dataset.label) td.dataset.label = heads[i]; }));
+  });
+}
+
+// ---- layout gallery ----
+const CODE = { '.': 0, L: 1, O: 2, M: 3, P: 4, Y: 5, H: 6, s: 7 };
+const SHORT = ['', '🍄', 'O', 'M', 'P', 'Y', 'H', 's'];
+function renderGallery() {
+  const s = document.querySelector('input[name=galScen]:checked').value, sort = $('galSort').value, copies = $('galCopies').checked;
+  const mx = Math.max(...D.scen[s].map(r => r.best));
+  const arr = D.scen[s].slice().sort(sort === 'best' ? (a, b) => b.best - a.best || a.area - b.area : (a, b) => a.area - b.area || a.w - b.w);
+  $('lays').innerHTML = arr.map(r => {
+    const rows = r.layout.split('/'), n = copies ? 3 : 1, W = r.w * n, H = r.h * n, cs = copies ? 9 : 22;
+    let cells = '';
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const c = CODE[rows[y % r.h][x % r.w]];
+      let cls = 't' + c;
+      if (copies && !(Math.floor(x / r.w) === 1 && Math.floor(y / r.h) === 1)) cls += ' dim';
+      if (n > 1 && (x + 1) % r.w === 0 && x < W - 1) cls += ' tr';
+      if (n > 1 && (y + 1) % r.h === 0 && y < H - 1) cls += ' tb';
+      cells += `<div class="${cls}">${!copies ? SHORT[c] : ''}</div>`;
+    }
+    const top = mx - r.best < TIE;
+    const trees = [['Oak', r.oak], ['Maple', r.maple], ['Pine', r.pine]].filter(t => t[1]).map(t => `${t[1]} ${t[0]}`).join(', ') || 'no trees';
+    return `<article class="lay"><h3>${sz(r)} <span class="rk${top ? ' best' : ''}">${top ? 'Best' : 'Rank ' + r.rankBest}</span></h3>
+      <div class="mini" style="--cs:${cs}px;grid-template-columns:repeat(${W},${cs}px)" role="img" aria-label="${sz(r)} layout: ${rows.join(', ')}">${cells}</div>
+      <div class="fig"><b>${f1(r.best)}g</b> per square per day</div>
+      <div class="meta">${f0(r.bestTile)}g per tile per day · ${r.logs} logs · ${trees} · ${r.walkway} walkway squares</div></article>`;
+  }).join('');
+}
+
+// ---- theme (dark by default, shared with the planner) ----
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $('themeBtn').textContent = t === 'dark' ? '☀ Light' : '🌙 Dark';
+  try { localStorage.setItem('mlp-theme', t); } catch (e) {}
+  if (D.scen) renderHeat();
+}
+let saved = 'dark'; try { saved = localStorage.getItem('mlp-theme') || 'dark'; } catch (e) {}
+$('themeBtn').addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+if (!D.scen) {
+  document.querySelector('.wrap').innerHTML = '<section class="card"><h2>No study data yet</h2><p>Run <code>node data/build-results.mjs</code> to pack the results into this page.</p></section>';
+} else {
+  setTheme(saved);
+  renderStats(); renderStrip(); renderScatter(); renderText(); renderGallery();
+  document.querySelectorAll('input[name=spreadScen]').forEach(el => el.addEventListener('change', renderStrip));
+  $('spreadZoom').addEventListener('change', renderStrip);
+  document.querySelectorAll('input[name=galScen]').forEach(el => el.addEventListener('change', renderGallery));
+  $('galSort').addEventListener('change', renderGallery);
+  $('galCopies').addEventListener('change', renderGallery);
+}
+</script>
+</body>
+</html>

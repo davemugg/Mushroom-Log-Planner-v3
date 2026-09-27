@@ -1,0 +1,1253 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mushroom Log Planner 3</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#f5efe0; --panel:#fffdf6; --ink:#2b2418; --muted:#6f6552; --line:#e3d8bd; --soft:#f1e9d4;
+  --accent:#4f7f25; --accent-ink:#fff; --warn:#b3372b; --ok:#3f7d2a;
+  --c-empty:#e8dcb8; --c-empty-ink:#a08f68; --c-path:#d9c79a;
+  --c-log:#6b4423; --c-oak:#4f8a3a; --c-maple:#c8552b; --c-pine:#1f5c46; --c-mystic:#7b4bb3; --c-mahog:#8a3b2a; --c-sap:#9dc56b;
+  --bg:#121417; --panel:#1b1e23; --ink:#e8e4da; --muted:#9a968c; --line:#2e333b; --soft:#23272e;
+  --accent:#86bf4f; --accent-ink:#0e1508; --warn:#ef7a6c; --ok:#8fcf66;
+  --c-empty:#2b2f36; --c-empty-ink:#6d7079; --c-path:#565c67;
+  --tile-line:#e8c36a;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f5efe0; --panel:#fffdf6; --ink:#2b2418; --muted:#6f6552; --line:#e3d8bd; --soft:#f1e9d4;
+  --accent:#4f7f25; --accent-ink:#fff; --warn:#b3372b; --ok:#3f7d2a;
+  --c-empty:#e8dcb8; --c-empty-ink:#a08f68; --c-path:#d9c79a;
+  --c-log:#6b4423; --c-oak:#4f8a3a; --c-maple:#c8552b; --c-pine:#1f5c46; --c-mystic:#7b4bb3; --c-mahog:#8a3b2a; --c-sap:#9dc56b;
+  --tile-line:#a8701a;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.top{padding:18px 20px 4px;max-width:1440px;margin:0 auto}
+h1{margin:0;font-size:22px}
+.sub{margin:2px 0 0;color:var(--muted)}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;padding:12px 20px 40px;max-width:1440px;margin:0 auto;align-items:start}
+@media (max-width:880px){.layout{grid-template-columns:minmax(0,1fr);padding:12px 16px 32px}.top{padding:16px 16px 4px}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.controls section{border-bottom:1px solid var(--line);padding:0 0 12px;margin:0 0 12px}
+h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 8px;font-weight:700}
+h3{font-size:15px;margin:0 0 10px}
+label{display:block;margin:7px 0}
+input[type=number],select{display:block;width:100%;margin-top:3px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--soft);color:var(--ink);font:inherit}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.chk{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.chk input{margin-top:3px;accent-color:var(--accent)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{color:var(--muted);font-size:12.5px;margin:4px 0 0}
+output{float:right;font-variant-numeric:tabular-nums;font-weight:600}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px;border:1px solid rgba(0,0,0,.2)}
+button{font:inherit;cursor:pointer}
+.primary{width:100%;padding:10px 12px;border:0;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-weight:700}
+.primary:disabled{opacity:.6;cursor:progress}
+.progress{height:6px;border-radius:3px;background:var(--soft);margin-top:10px;overflow:hidden}
+.progress div{height:100%;width:0;background:var(--accent);transition:width .15s}
+.main{display:flex;flex-direction:column;gap:16px;min-width:0}
+.gridhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:10px}
+.gridhead .note{color:var(--muted);font-size:12.5px}
+.brushes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.brush{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--line);border-radius:999px;background:var(--soft);color:var(--ink);font-size:12.5px}
+.brush.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+.brush .sw{margin:0}
+.gridwrap{overflow:auto;max-width:100%;padding:2px}
+.grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);width:max-content;touch-action:none}
+.cell{width:var(--cs);height:var(--cs);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cs)*.46);font-weight:800;color:#fff;position:relative;user-select:none;cursor:pointer;line-height:1}
+.t0{background:var(--c-empty);color:var(--c-empty-ink)}
+.t1{background:var(--c-log)}
+.t2{background:var(--c-oak)}.t3{background:var(--c-maple)}.t4{background:var(--c-pine)}.t5{background:var(--c-mystic)}.t6{background:var(--c-mahog)}
+.t7{background:var(--c-sap);color:#2f4a12}
+.cell.tap::after{content:"";position:absolute;right:1px;bottom:1px;width:30%;height:30%;border-radius:50%;background:#f3d36b;border:1px solid rgba(0,0,0,.45)}
+.cell.blocked{outline:2px solid var(--warn);outline-offset:-2px}
+.cell.invalid{background-image:repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,40,40,.6) 3px 5px)}
+.cell.inr{box-shadow:inset 0 0 0 999px rgba(255,255,255,.22)}
+.cell.hub{box-shadow:inset 0 0 0 2px #fff}
+.tip{position:fixed;z-index:10;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:12.5px;max-width:300px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.tip .tt{display:block;margin-bottom:3px;font-weight:700}
+.tip .dim{color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat .k{color:var(--muted);font-size:12px}
+.stat .v{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.stat .s{color:var(--muted);font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+@media (max-width:400px){.cards{grid-template-columns:minmax(0,1fr)}}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:6px 6px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+tfoot td{font-weight:700;border-bottom:0}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--soft);margin:4px 0 12px}
+.bar div{height:100%}
+.msg{padding:9px 12px;border-radius:9px;margin:0 0 10px;font-size:13px;border:1px solid var(--line);background:var(--soft)}
+.msg.warn{border-color:color-mix(in srgb,var(--warn) 50%,var(--line));color:var(--warn)}
+.msg.ok{border-color:color-mix(in srgb,var(--ok) 50%,var(--line));color:var(--ok)}
+ul.list{margin:0;padding-left:18px}
+ul.list li{margin:3px 0}
+.muted{color:var(--muted)}
+.scroll{overflow-x:auto}
+/* Narrow screens: header buttons wrap under the title; tables become stacked label/value cards */
+@media (max-width:700px){
+  .top{flex-direction:column;align-items:stretch;gap:10px}
+  .navlinks{justify-content:flex-start}
+}
+@media (max-width:560px){
+  table.stack thead{display:none}
+  table.stack,table.stack tbody,table.stack tfoot{display:block}
+  table.stack tr{display:grid;grid-template-columns:repeat(var(--stack-cols,2),minmax(0,1fr));column-gap:16px;padding:8px 0;border-bottom:1px solid var(--line)}
+  table.stack td{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border:0;padding:2px 0;text-align:right;white-space:normal}
+  table.stack td::before{content:attr(data-label);color:var(--muted);font-weight:400;text-align:left;font-size:.92em}
+  table.stack td:first-child{grid-column:1/-1;justify-content:flex-start;font-weight:700;text-align:left}
+  table.stack td:first-child::before{content:none}
+  table.stack td:empty,table.stack .hide-sm{display:none}
+}
+@media (max-width:880px){
+  /* keep Generate in reach while scrolling through the settings */
+  .controls .primary{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom, 0px));z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+}
+
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--soft)}
+.seg label{margin:0;position:relative;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;text-align:center;padding:7px 6px;border-radius:7px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg input:checked+span{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:1px}
+.cell.copy{filter:brightness(.7) saturate(.8)}
+.cell.tr::before,.cell.tb::before{content:"";position:absolute;inset:0 -1px -1px 0;pointer-events:none;border:0 solid var(--tile-line);z-index:1}
+.cell.tr::before{border-right-width:2px}
+.cell.tb::before{border-bottom-width:2px}
+tr.hl td{background:var(--soft);font-weight:700}
+.subopts{margin:6px 0 0 10px;padding-left:12px;border-left:2px solid var(--line)}
+.cell.unused{background-image:radial-gradient(var(--c-empty-ink) 1px,transparent 1.3px);background-size:6px 6px;opacity:.55}
+.cell.path{background:var(--c-path)}
+.cell.entrance{background:var(--accent);color:var(--accent-ink);font-size:calc(var(--cs)*.6)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.navlinks{display:flex;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+a.theme{text-decoration:none}
+.theme{flex:none;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink);font-size:12.5px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>🍄 Mushroom Log Planner 3</h1>
+    <p class="sub">For Stardew Valley 1.6. Plans a high-earning layout of Mushroom Logs, trees and tappers for a fixed plot, or a repeating tile you can copy as your farm grows.</p>
+  </div>
+  <div class="navlinks"><a class="theme" href="results.html">📊 Tile study</a><a class="theme" href="guide.html">📖 Guide &amp; methods</a><button class="theme" id="themeBtn">☀ Light</button></div>
+</header>
+
+<div class="layout">
+  <aside class="panel controls">
+    <section>
+      <h2>Layout type</h2>
+      <div class="seg" role="radiogroup" aria-label="Layout type">
+        <label><input type="radio" name="mode" id="modeFixed" value="fixed" checked><span>Fixed plot</span></label>
+        <label><input type="radio" name="mode" id="modeTile" value="tile"><span>Repeating tile</span></label>
+      </div>
+      <p class="hint" id="modeHint"></p>
+    </section>
+    <section>
+      <h2 id="plotTitle">Plot</h2>
+      <div id="fixedSize">
+        <div class="row2">
+          <label>Width (X)<input type="number" id="w" min="3" max="64" value="12"></label>
+          <label>Height (Y)<input type="number" id="h" min="3" max="64" value="10"></label>
+        </div>
+      </div>
+      <div id="tileSize" hidden>
+        <div class="row2">
+          <label>Tile width<input type="number" id="tw" min="2" max="16" value="6"></label>
+          <label>Tile height<input type="number" id="th" min="2" max="16" value="6"></label>
+        </div>
+        <label class="chk"><input type="checkbox" id="autoSize"><span>Find the best tile size, trying every size from 2×2 up to the width and height above</span></label>
+        <div class="row2">
+          <label>Preview: tiles across<input type="number" id="nx" min="1" max="12" value="3"></label>
+          <label>Tiles down<input type="number" id="ny" min="1" max="12" value="3"></label>
+        </div>
+        <p class="hint">Logs near a tile's edge count the trees in the neighboring copies, and walkways join up across tile edges. Earnings per tile assume copies on every side.</p>
+      </div>
+      <label class="chk"><input type="checkbox" id="access" checked><span>Leave walkways so you can reach every log and tapped tree</span></label>
+      <p class="hint">Normally you can harvest from any of the 8 tiles around an item, and the plot's edges count as reachable from outside.</p>
+      <div class="subopts" id="accessOpts">
+        <label class="chk"><input type="checkbox" id="walkOnly"><span id="walkOnlyText">Harvest only from walkways, never from outside the plot's edge</span></label>
+        <p class="hint">You can still walk in from any edge, but logs and tapped trees on the edge need a walkway beside them too. Always on with a continuous path.</p>
+        <label class="chk"><input type="checkbox" id="continuous"><span id="contText">Make the walkway one continuous path with a single entrance</span></label>
+        <label id="sideLabel">Entrance side
+          <select id="side">
+            <option value="any">Any edge (planner picks)</option>
+            <option value="bottom">Bottom</option><option value="top">Top</option>
+            <option value="left">Left</option><option value="right">Right</option>
+          </select>
+        </label>
+        <p class="hint" id="contHint">The plot is treated as fenced in. You walk in at the entrance and only the connected path counts. Items on the edge can't be reached from outside.</p>
+        <p class="hint" id="tileAccessHint" hidden>A repeated tile has no outside to walk in from, so walkways have to run off the tile's edges and join the next copy. A walkway that stays inside one tile counts as unreachable. With the connected-network option, walkways must join up both across and down, so every tile links to every other.</p>
+        <label class="chk"><input type="checkbox" id="orth"><span>Console mode: every log needs a walkway directly beside it (up, down, left or right, not diagonal)</span></label>
+        <label class="chk"><input type="checkbox" id="orthTrees"><span>Apply console mode to tapped trees too</span></label>
+      </div>
+    </section>
+    <section>
+      <h2>Trees you can plant</h2>
+      <div id="treeChecks"></div>
+      <label class="chk"><input type="checkbox" id="saplings"><span>Allow stunted saplings as filler</span></label>
+      <p class="hint">A sapling next to a grown tree never finishes growing. It still counts as a nearby tree, so logs make more mushrooms and better quality. It can't be tapped, though, and only adds Common, Red or Purple mushrooms to the mix.</p>
+    </section>
+    <section>
+      <h2>Mushroom target</h2>
+      <label>Preferred mushroom
+        <select id="target">
+          <option value="-1">None: just maximize gold</option>
+          <option value="3">Morel (from Oak)</option>
+          <option value="4">Chanterelle (from Pine)</option>
+          <option value="1">Red Mushroom (from Maple)</option>
+          <option value="2">Purple Mushroom (from Mystic)</option>
+          <option value="0">Common Mushroom</option>
+        </select>
+      </label>
+      <label id="pctLabel">Minimum share of all mushrooms <output id="pctOut">50%</output><input type="range" id="pct" min="0" max="100" value="50"></label>
+      <p class="hint" id="maxHint"></p>
+    </section>
+    <section>
+      <h2>Tapping</h2>
+      <label class="chk"><input type="checkbox" id="tap" checked><span>Tap the trees and include what they produce</span></label>
+      <label>Tapper type
+        <select id="tapper"><option value="0">Tapper</option><option value="1">Heavy Tapper (twice as fast)</option></select>
+      </label>
+      <label class="chk"><input type="checkbox" id="prof"><span>Tapper profession (syrups sell for 25% more)</span></label>
+    </section>
+    <section>
+      <h2>Conditions</h2>
+      <label>Share of trees with moss <output id="mossOut">0%</output><input type="range" id="moss" min="0" max="100" value="0"></label>
+      <p class="hint">Only Oak, Maple and Pine grow moss. Mossy trees near a log make higher-quality mushrooms more likely.</p>
+      <label>Rainy days <output id="rainOut">0%</output><input type="range" id="rain" min="0" max="60" value="0"></label>
+      <p class="hint">Rain makes a log finish a day sooner. This is an estimate.</p>
+      <label>Search time
+        <select id="effort"><option value="2000">Quick (2 s)</option><option value="5000" selected>Normal (5 s)</option><option value="12000">Thorough (12 s)</option></select>
+      </label>
+    </section>
+    <button id="go" class="primary">Generate optimal layout</button>
+    <div class="progress" id="prog" hidden><div id="progBar"></div></div>
+    <p class="hint" id="staleHint" hidden>You changed a setting. Generate again to re-optimize the layout. The numbers below already use the new settings.</p>
+  </aside>
+
+  <div class="main">
+    <section class="panel">
+      <div class="gridhead">
+        <h3 id="gridTitle">Layout</h3>
+        <span class="note" id="gridNote">Hover a log to see its 7×7 range. Pick a brush to edit tiles by hand. A yellow dot marks a tapper.</span>
+      </div>
+      <div class="brushes" id="brushes"></div>
+      <div class="gridwrap" id="gridWrap"><div class="grid" id="grid"></div></div>
+    </section>
+    <section class="stats" id="stats"></section>
+    <div id="msgs"></div>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<!-- ================= CORE MODEL (shared by page and worker) ================= -->
+<script id="core">
+const MUSH = [
+  { name: 'Common Mushroom', price: 40,  color: '#cdb88f' },
+  { name: 'Red Mushroom',    price: 75,  color: '#d9483b' },
+  { name: 'Purple Mushroom', price: 250, color: '#9160d6' },
+  { name: 'Morel',           price: 150, color: '#8a5a2e' },
+  { name: 'Chanterelle',     price: 160, color: '#eba12c' },
+];
+// Random ("basic") mushroom added to every log's pool
+const BASIC = [0.8075, 0.1425, 0.05, 0, 0];
+const TILE = [
+  { name: 'Empty / walkway', short: '' },
+  { name: 'Mushroom Log', short: '🍄' },
+  { name: 'Oak Tree',      short: 'O', seed: 'Acorn',            mush: [0, 0, 0, 1, 0],   product: 'Oak Resin',    price: 150,  qty: 1,   days: 7, heavy: 3, syrup: true,  moss: 1 },
+  { name: 'Maple Tree',    short: 'M', seed: 'Maple Seed',       mush: [0, .9, .1, 0, 0], product: 'Maple Syrup',  price: 200,  qty: 1,   days: 9, heavy: 4, syrup: true,  moss: 1 },
+  { name: 'Pine Tree',     short: 'P', seed: 'Pine Cone',        mush: [0, 0, 0, 0, 1],   product: 'Pine Tar',     price: 100,  qty: 1,   days: 5, heavy: 2, syrup: true,  moss: 1 },
+  { name: 'Mystic Tree',   short: 'Y', seed: 'Mystic Tree Seed', mush: [0, 0, 1, 0, 0],   product: 'Mystic Syrup', price: 1000, qty: 1,   days: 7, heavy: 3, syrup: true,  moss: 0 },
+  { name: 'Mahogany Tree', short: 'H', seed: 'Mahogany Seed',    mush: BASIC,             product: 'Sap',          price: 2,    qty: 7.5, heavyQty: 5.5, days: 1, heavy: 1, syrup: false, moss: 0 },
+  { name: 'Stunted sapling', short: 's' },
+];
+const TREE_CODES = [2, 3, 4, 5, 6];
+// Items per harvest: Mahogany gives 5-10 Sap with a Tapper but 3-8 with a Heavy Tapper (wiki)
+function tapQty(t, heavy) { return heavy && t.heavyQty ? t.heavyQty : t.qty; }
+const QMULT = [1, 1.25, 1.5, 2], QNAMES = ['Normal', 'Silver', 'Gold', 'Iridium'];
+const MUSHW = new Float64Array(8 * 5);
+const MOSSY = new Float64Array(8);
+for (const c of TREE_CODES) { for (let t = 0; t < 5; t++) MUSHW[c * 5 + t] = TILE[c].mush[t]; MOSSY[c] = TILE[c].moss; }
+const QPRICE = MUSH.map(m => QMULT.map(q => Math.floor(m.price * q)));
+
+function isMature(c) { return c >= 2 && c <= 6; }
+function isTree(c) { return c >= 2 && c <= 7; }
+function qdist(p) { const q = 1 - p; return [q, p * q, p * p * q, p * p * p]; }
+
+function makeCtx(W, H, o) {
+  const N = W * H;
+  const ctx = { W, H, N, o, grid: new Uint8Array(N), logV: new Float64Array(N * 6), sum: new Float64Array(6),
+    tapSum: 0, reach: new Int32Array(N), queue: new Int32Array(N), tapVal: new Float64Array(8),
+    cc: o.continuous ? new Float64Array((N + 1) * 6) : null, ids: new Int32Array(8), K: 0, sel: 0, wrap: !!o.wrap };
+  if (ctx.wrap) { // repeating-tile mode: walkway lift offsets + per-network wrap info
+    ctx.offX = new Int32Array(N); ctx.offY = new Int32Array(N);
+    ctx.flags = new Uint8Array(N + 1); ctx.v1x = new Int32Array(N + 1); ctx.v1y = new Int32Array(N + 1);
+  }
+  ctx.interval = 4 - (1 - Math.pow(1 - o.rain, 4));
+  if (o.tap) for (const c of TREE_CODES) {
+    const t = TILE[c];
+    const price = (t.syrup && o.tapperProf) ? Math.floor(t.price * 1.25) : t.price;
+    ctx.tapVal[c] = price * tapQty(t, o.heavy) / (o.heavy ? t.heavy : t.days);
+  }
+  ctx.pen = 3000 * N; // gold/day per 100% of share deficit: effectively "reach the target first"
+  return ctx;
+}
+
+// Expected output of the log at tile i, written into ctx.logV[i*6 .. i*6+5] (5 mushroom counts/day + gold/day)
+function computeLog(ctx, i) {
+  const { W, H, grid, logV, sum } = ctx, b6 = i * 6;
+  let v0 = 0, v1 = 0, v2 = 0, v3 = 0, v4 = 0, g = 0;
+  if (grid[i] === 1) {
+    const x = i % W, y = (i - x) / W;
+    let n = 0, mat = 0, moss = 0, w0 = 0, w1 = 0, w2 = 0, w3 = 0, w4 = 0;
+    if (ctx.wrap) {
+      // Repeating tile: the window runs into neighbouring copies (a small tile can be counted several times)
+      for (let dy = -3; dy <= 3; dy++) {
+        const r = ((((y + dy) % H) + H) % H) * W;
+        for (let dx = -3; dx <= 3; dx++) {
+          const c = grid[r + (((x + dx) % W) + W) % W];
+          if (c >= 2 && c <= 7) {
+            n++;
+            if (c <= 6) { mat++; const b = c * 5; w0 += MUSHW[b]; w1 += MUSHW[b + 1]; w2 += MUSHW[b + 2]; w3 += MUSHW[b + 3]; w4 += MUSHW[b + 4]; moss += MOSSY[c]; }
+          }
+        }
+      }
+    } else {
+      const y0 = Math.max(0, y - 3), y1 = Math.min(H - 1, y + 3), x0 = Math.max(0, x - 3), x1 = Math.min(W - 1, x + 3);
+      for (let yy = y0; yy <= y1; yy++) {
+        const r = yy * W;
+        for (let xx = x0; xx <= x1; xx++) {
+          const c = grid[r + xx];
+          if (c >= 2 && c <= 7) {
+            n++;
+            if (c <= 6) { mat++; const b = c * 5; w0 += MUSHW[b]; w1 += MUSHW[b + 1]; w2 += MUSHW[b + 2]; w3 += MUSHW[b + 3]; w4 += MUSHW[b + 4]; moss += MOSSY[c]; }
+          }
+        }
+      }
+    }
+    const B = Math.max(1, Math.floor(n * 0.75)), tot = B + mat, k = n >> 1;
+    const amt = (Math.min(5, Math.max(1, k)) + Math.min(5, Math.max(1, 2 * k))) / 2;
+    const p = Math.min(1, (n + moss * ctx.o.moss) / 40);
+    const q = 1 - p, q0 = q, q1 = p * q, q2 = p * p * q, q3 = p * p * p;
+    const per = amt / ctx.interval / tot;
+    v0 = (B * BASIC[0] + w0) * per; v1 = (B * BASIC[1] + w1) * per; v2 = (B * BASIC[2] + w2) * per;
+    v3 = w3 * per; v4 = w4 * per;
+    const P = QPRICE;
+    g = v0 * (q0 * P[0][0] + q1 * P[0][1] + q2 * P[0][2] + q3 * P[0][3])
+      + v1 * (q0 * P[1][0] + q1 * P[1][1] + q2 * P[1][2] + q3 * P[1][3])
+      + v2 * (q0 * P[2][0] + q1 * P[2][1] + q2 * P[2][2] + q3 * P[2][3])
+      + v3 * (q0 * P[3][0] + q1 * P[3][1] + q2 * P[3][2] + q3 * P[3][3])
+      + v4 * (q0 * P[4][0] + q1 * P[4][1] + q2 * P[4][2] + q3 * P[4][3]);
+  }
+  sum[0] += v0 - logV[b6]; sum[1] += v1 - logV[b6 + 1]; sum[2] += v2 - logV[b6 + 2];
+  sum[3] += v3 - logV[b6 + 3]; sum[4] += v4 - logV[b6 + 4]; sum[5] += g - logV[b6 + 5];
+  logV[b6] = v0; logV[b6 + 1] = v1; logV[b6 + 2] = v2; logV[b6 + 3] = v3; logV[b6 + 4] = v4; logV[b6 + 5] = g;
+}
+
+function setTile(ctx, i, c) { ctx.tapSum += ctx.tapVal[c] - ctx.tapVal[ctx.grid[i]]; ctx.grid[i] = c; }
+
+function refreshAround(ctx, i) {
+  const { W, H, grid, logV } = ctx, x = i % W, y = (i - x) / W;
+  if (ctx.wrap) {
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const j = ((((y + dy) % H) + H) % H) * W + (((x + dx) % W) + W) % W;
+      if (grid[j] === 1 || logV[j * 6 + 5] !== 0) computeLog(ctx, j);
+    }
+    return;
+  }
+  for (let yy = Math.max(0, y - 3); yy <= Math.min(H - 1, y + 3); yy++)
+    for (let xx = Math.max(0, x - 3); xx <= Math.min(W - 1, x + 3); xx++) {
+      const j = yy * W + xx;
+      if (grid[j] === 1 || logV[j * 6 + 5] !== 0) computeLog(ctx, j);
+    }
+}
+
+function loadGrid(ctx, g) {
+  ctx.grid.set(g); ctx.logV.fill(0); ctx.sum.fill(0); ctx.tapSum = 0;
+  for (let i = 0; i < ctx.N; i++) { ctx.tapSum += ctx.tapVal[g[i]]; if (g[i] === 1) computeLog(ctx, i); }
+}
+
+// Grown trees can't touch (8-neighbour); a stunted sapling must touch a grown tree to stay stunted.
+function validAt(ctx, i) {
+  const { W, H, grid } = ctx, c = grid[i];
+  if (c < 2) return true;
+  const x = i % W, y = (i - x) / W;
+  let has = false;
+  for (let dy = -1; dy <= 1 && !has; dy++) for (let dx = -1; dx <= 1; dx++) {
+    if (!dx && !dy) continue;
+    let xx = x + dx, yy = y + dy;
+    if (ctx.wrap) { xx = (xx + W) % W; yy = (yy + H) % H; }
+    else if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+    if (isMature(grid[yy * W + xx])) { has = true; break; }
+  }
+  return c === 7 ? has : !has;
+}
+function validAround(ctx, i) {
+  const { W, H } = ctx, x = i % W, y = (i - x) / W;
+  if (ctx.wrap) {
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
+      if (!validAt(ctx, ((y + dy + H) % H) * W + (x + dx + W) % W)) return false;
+    return true;
+  }
+  for (let yy = Math.max(0, y - 1); yy <= Math.min(H - 1, y + 1); yy++)
+    for (let xx = Math.max(0, x - 1); xx <= Math.min(W - 1, x + 1); xx++)
+      if (!validAt(ctx, yy * W + xx)) return false;
+  return true;
+}
+
+// Edge tiles the player may enter from, for the chosen entrance side
+function edgeTiles(ctx) {
+  const { W, H } = ctx, side = ctx.o.continuous ? ctx.o.side : 'any', out = [];
+  if (side === 'any' || side === 'bottom') for (let x = 0; x < W; x++) out.push((H - 1) * W + x);
+  if (side === 'any' || side === 'top') for (let x = 0; x < W; x++) out.push(x);
+  if (side === 'any' || side === 'left') for (let y = 0; y < H; y++) out.push(y * W);
+  if (side === 'any' || side === 'right') for (let y = 0; y < H; y++) out.push(y * W + W - 1);
+  return out;
+}
+
+// Flood-fill walkable (empty) tiles from the plot edge. Normal mode: everything reachable gets label 1.
+// Continuous mode: each edge-connected walkway network gets its own label 1..K (only one will be used).
+function computeReach(ctx) {
+  const { W, grid, reach, queue, o } = ctx;
+  reach.fill(0);
+  let qh = 0, qt = 0, label = 1;
+  const push = j => { if (!reach[j] && grid[j] === 0) { reach[j] = label; queue[qt++] = j; } };
+  const flood = () => {
+    while (qh < qt) {
+      const j = queue[qh++], x = j % W;
+      if (x > 0) push(j - 1);
+      if (x < W - 1) push(j + 1);
+      if (j >= W) push(j - W);
+      if (j < ctx.N - W) push(j + W);
+    }
+  };
+  ctx.K = 0;
+  for (const j of edgeTiles(ctx)) {
+    if (reach[j] || grid[j] !== 0) continue;
+    push(j); flood(); ctx.K = label;
+    if (o.continuous) label++;
+  }
+}
+// Repeating-tile mode: the tile repeats forever, so there is no plot edge to walk in from. Flood each walkway
+// network across tile edges and note whether it joins its own copies: in one direction (endless parallel strips,
+// each reachable from the edge of the finished farm) or in two (one network connecting every tile).
+function computeReachWrap(ctx) {
+  const { W, H, grid, reach, queue, offX, offY, flags, v1x, v1y } = ctx;
+  reach.fill(0);
+  let label = 0;
+  for (let s = 0; s < ctx.N; s++) {
+    if (reach[s] || grid[s] !== 0) continue;
+    label++; flags[label] = 0;
+    reach[s] = label; offX[s] = 0; offY[s] = 0;
+    let qh = 0, qt = 0; queue[qt++] = s;
+    while (qh < qt) {
+      const j = queue[qh++], x = j % W, y = (j - x) / W, ox = offX[j], oy = offY[j];
+      for (let d = 0; d < 4; d++) {
+        let nx = x + (d === 0 ? 1 : d === 1 ? -1 : 0), ny = y + (d === 2 ? 1 : d === 3 ? -1 : 0), nox = ox, noy = oy;
+        if (nx < 0) { nx += W; nox--; } else if (nx >= W) { nx -= W; nox++; }
+        if (ny < 0) { ny += H; noy--; } else if (ny >= H) { ny -= H; noy++; }
+        const k = ny * W + nx;
+        if (grid[k] !== 0) continue;
+        if (!reach[k]) { reach[k] = label; offX[k] = nox; offY[k] = noy; queue[qt++] = k; }
+        else {
+          const ax = nox - offX[k], ay = noy - offY[k]; // same cell reached in a different copy: the network wraps
+          if (ax || ay) {
+            if (!flags[label]) { flags[label] = 1; v1x[label] = ax; v1y[label] = ay; }
+            else if (flags[label] === 1 && v1x[label] * ay - v1y[label] * ax !== 0) flags[label] = 2;
+          }
+        }
+      }
+    }
+  }
+  ctx.K = label;
+}
+
+// Can the player harvest tile i? orth = must stand directly beside it (no diagonals)
+function accessible(ctx, i, orth) {
+  const { W, H, reach, o } = ctx, x = i % W, y = (i - x) / W;
+  if (ctx.wrap) {
+    const need = o.continuous ? 2 : 1;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if ((!dx && !dy) || (orth && dx && dy)) continue;
+      const r = reach[((y + dy + H) % H) * W + (x + dx + W) % W];
+      if (r > 0 && ctx.flags[r] >= need) return true;
+    }
+    return false;
+  }
+  if (!o.continuous && !o.walkOnly && (x === 0 || y === 0 || x === W - 1 || y === H - 1)) return true; // reachable from outside the plot
+  const want = o.continuous ? ctx.sel : -1;
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    if ((!dx && !dy) || (orth && dx && dy)) continue;
+    const xx = x + dx, yy = y + dy;
+    if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+    const r = reach[yy * W + xx];
+    if (want < 0 ? r > 0 : (want > 0 && r === want)) return true;
+  }
+  return false;
+}
+
+function applyTarget(ctx, c0, c1, c2, c3, c4, gold) {
+  const o = ctx.o;
+  if (o.target >= 0) {
+    const tot = c0 + c1 + c2 + c3 + c4;
+    const share = tot > 0 ? [c0, c1, c2, c3, c4][o.target] / tot : 0;
+    const def = o.targetPct - share;
+    if (def > 0) gold -= def * ctx.pen;
+  }
+  return gold;
+}
+
+function evalScore(ctx) {
+  const o = ctx.o, s = ctx.sum;
+  if (!o.access) return applyTarget(ctx, s[0], s[1], s[2], s[3], s[4], s[5] + ctx.tapSum);
+  if (ctx.wrap) computeReachWrap(ctx); else computeReach(ctx);
+  const { grid, logV, tapVal, N } = ctx;
+  if (ctx.wrap || !o.continuous) {
+    let c0 = 0, c1 = 0, c2 = 0, c3 = 0, c4 = 0, gold = 0;
+    for (let i = 0; i < N; i++) {
+      const c = grid[i];
+      if (c === 1) {
+        if (accessible(ctx, i, o.orth)) { const b = i * 6; c0 += logV[b]; c1 += logV[b + 1]; c2 += logV[b + 2]; c3 += logV[b + 3]; c4 += logV[b + 4]; gold += logV[b + 5]; }
+      } else if (tapVal[c] > 0 && accessible(ctx, i, o.orthTrees)) gold += tapVal[c];
+    }
+    return applyTarget(ctx, c0, c1, c2, c3, c4, gold);
+  }
+  // Continuous: tally what each walkway network can reach, then keep the single best network
+  const K = ctx.K, cc = ctx.cc, ids = ctx.ids, reach = ctx.reach, W = ctx.W, H = ctx.H;
+  if (K === 0) { ctx.sel = 0; return applyTarget(ctx, 0, 0, 0, 0, 0, 0); }
+  cc.fill(0, 0, (K + 1) * 6);
+  for (let i = 0; i < N; i++) {
+    const c = grid[i], isLog = c === 1, tv = tapVal[c];
+    if (!isLog && !(tv > 0)) continue;
+    const orth = isLog ? o.orth : o.orthTrees, x = i % W, y = (i - x) / W;
+    let n = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if ((!dx && !dy) || (orth && dx && dy)) continue;
+      const xx = x + dx, yy = y + dy;
+      if (xx < 0 || yy < 0 || xx >= W || yy >= H) continue;
+      const r = reach[yy * W + xx];
+      if (r > 0) { let dup = false; for (let k = 0; k < n; k++) if (ids[k] === r) { dup = true; break; } if (!dup) ids[n++] = r; }
+    }
+    for (let k = 0; k < n; k++) {
+      const b = ids[k] * 6;
+      if (isLog) { const lb = i * 6; for (let t = 0; t < 6; t++) cc[b + t] += logV[lb + t]; }
+      else cc[b + 5] += tv;
+    }
+  }
+  let best = -Infinity, sel = 0;
+  for (let k = 1; k <= K; k++) {
+    const b = k * 6, v = applyTarget(ctx, cc[b], cc[b + 1], cc[b + 2], cc[b + 3], cc[b + 4], cc[b + 5]);
+    if (v > best) { best = v; sel = k; }
+  }
+  ctx.sel = sel;
+  return best;
+}
+
+// Highest share of mushroom t any single log can reach with the allowed trees
+function maxShare(t, allowed) {
+  let best = BASIC[t];
+  for (const c of allowed) for (let n = 1; n <= 16; n++) {
+    const B = Math.max(1, Math.floor(n * 0.75));
+    best = Math.max(best, (B * BASIC[t] + n * TILE[c].mush[t]) / (B + n));
+  }
+  return best;
+}
+
+function createOptimizer(W, H, o, budget, extraSeeds = []) {
+  const ctx = makeCtx(W, H, o), N = ctx.N, grid = ctx.grid;
+  const states = [0, 1, ...o.allowed];
+  if (o.saplings && o.allowed.length) states.push(7);
+  const pattern = f => { const g = new Uint8Array(N); for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) g[y * W + x] = f(x, y); return g; };
+
+  // Seeds: empty, and a few dense periodic layouts for each tree type
+  const seeds = [new Uint8Array(N), pattern(() => 1)];
+  for (const c of o.allowed) {
+    seeds.push(pattern((x, y) => (x % 2 === 1 && y % 2 === 1) ? c : 1));
+    seeds.push(pattern((x, y) => { const r = y % 3; return r === 2 ? 0 : r === 0 ? (x % 2 === 1 ? c : 1) : 1; }));
+    seeds.push(pattern((x, y) => { const r = x % 3; return r === 2 ? 0 : r === 0 ? (y % 2 === 1 ? c : 1) : 1; }));
+    seeds.push(pattern((x, y) => { const r = y % 4; return r === 3 ? 0 : (r === 1 && x % 2 === 1) ? c : 1; }));
+    // "Comb" layouts: one spine walkway with branches, so every walkway is connected
+    const cx = W >> 1, cy = H >> 1;
+    for (const off of [0, 1, 2]) {
+      seeds.push(pattern((x, y) => {
+        if (x === cx || (y + off) % 3 === 2) return 0;
+        return (y + off) % 3 === 0 ? ((x % 2 === 1 && Math.abs(x - cx) > 1) ? c : 1) : 1;
+      }));
+      seeds.push(pattern((x, y) => {
+        if (y === cy || (x + off) % 3 === 2) return 0;
+        return (x + off) % 3 === 0 ? ((y % 2 === 1 && Math.abs(y - cy) > 1) ? c : 1) : 1;
+      }));
+    }
+  }
+  if (o.wrap) for (const c of o.allowed) {
+    // Tile seeds: walkway along the tile's right and/or bottom edge, so it joins the next copy
+    seeds.push(pattern((x, y) => (x === W - 1 || y === H - 1) ? 0 : (x % 2 === 1 && y % 2 === 1) ? c : 1));
+    seeds.push(pattern((x, y) => (x === W - 1 || y === H - 1) ? 0 : (x % 2 === 0 && y % 2 === 0) ? c : 1));
+    seeds.push(pattern((x, y) => y === H - 1 ? 0 : (x % 2 === 1 && y % 2 === 1) ? c : 1));
+    seeds.push(pattern((x, y) => x === W - 1 ? 0 : (x % 2 === 1 && y % 2 === 1) ? c : 1));
+  }
+  for (const g of extraSeeds) if (g && g.length === N) seeds.push(Uint8Array.from(g));
+  let cur = -Infinity, bestGrid = null;
+  for (const s of seeds) {
+    loadGrid(ctx, s);
+    let ok = true;
+    for (let i = 0; i < N && ok; i++) ok = validAt(ctx, i);
+    if (!ok) continue; // e.g. a pattern whose trees touch across the tile edge
+    const v = evalScore(ctx);
+    if (v > cur) { cur = v; bestGrid = s.slice(); }
+  }
+  loadGrid(ctx, bestGrid); cur = evalScore(ctx);
+  let best = cur;
+
+  function propose() {
+    const i = (Math.random() * N) | 0, r = Math.random(), x = i % W, y = (i - x) / W;
+    let j = -1, ni, nj = 0;
+    if (r < 0.55) {
+      ni = states[(Math.random() * states.length) | 0];
+    } else if (r < 0.85) {
+      let xx = x + ((Math.random() * 7) | 0) - 3, yy = y + ((Math.random() * 7) | 0) - 3;
+      if (ctx.wrap) { xx = (xx + 3 * W) % W; yy = (yy + 3 * H) % H; }
+      else if (xx < 0 || yy < 0 || xx >= W || yy >= H) return null;
+      j = yy * W + xx; if (j === i) return null; ni = grid[j]; nj = grid[i];
+    } else {
+      let xx = x + ((Math.random() * 3) | 0) - 1, yy = y + ((Math.random() * 3) | 0) - 1;
+      if (ctx.wrap) { xx = (xx + W) % W; yy = (yy + H) % H; }
+      else if (xx < 0 || yy < 0 || xx >= W || yy >= H) return null;
+      ni = grid[yy * W + xx];
+    }
+    if (ni === grid[i] && (j < 0 || nj === grid[j])) return null;
+    return [i, ni, j, nj];
+  }
+  function apply(m) {
+    const [i, ni, j, nj] = m, oi = grid[i], oj = j >= 0 ? grid[j] : 0;
+    setTile(ctx, i, ni); if (j >= 0) setTile(ctx, j, nj);
+    if (!validAround(ctx, i) || (j >= 0 && !validAround(ctx, j))) {
+      setTile(ctx, i, oi); if (j >= 0) setTile(ctx, j, oj);
+      return null;
+    }
+    refreshAround(ctx, i); if (j >= 0) refreshAround(ctx, j);
+    return [i, oi, j, oj];
+  }
+  function undo(u) {
+    const [i, oi, j, oj] = u;
+    setTile(ctx, i, oi); if (j >= 0) setTile(ctx, j, oj);
+    refreshAround(ctx, i); if (j >= 0) refreshAround(ctx, j);
+  }
+
+  // Estimate a starting temperature from typical move sizes
+  let dsum = 0, dn = 0;
+  for (let k = 0; k < 400 && dn < 150; k++) {
+    const m = propose(); if (!m) continue;
+    const u = apply(m); if (!u) continue;
+    dsum += Math.abs(evalScore(ctx) - cur); dn++; undo(u);
+  }
+  const T0 = Math.max(1, dn ? (dsum / dn) * 0.6 : 10), T1 = T0 * 1e-4;
+  const saBudget = budget * 0.85;
+  const t0 = performance.now();
+  let phase = 'sa', polishI = 0, polishPass = 0;
+
+  function saStep(temp) {
+    const m = propose(); if (!m) return;
+    const u = apply(m); if (!u) return;
+    const s = evalScore(ctx), d = s - cur;
+    if (d >= 0 || Math.random() < Math.exp(d / temp)) {
+      cur = s;
+      if (s > best + 1e-9) { best = s; bestGrid.set(grid); }
+    } else undo(u);
+  }
+  function polishTile(i) {
+    for (const s of states) {
+      if (s === grid[i]) continue;
+      const u = apply([i, s, -1, 0]); if (!u) continue;
+      const v = evalScore(ctx);
+      if (v > cur + 1e-9) { cur = v; } else undo(u);
+    }
+  }
+
+  return {
+    step(ms) {
+      const end = performance.now() + ms;
+      while (performance.now() < end) {
+        const el = performance.now() - t0;
+        if (phase === 'sa') {
+          if (el >= saBudget) { phase = 'polish'; loadGrid(ctx, bestGrid); cur = evalScore(ctx); continue; }
+          const temp = T0 * Math.pow(T1 / T0, el / saBudget);
+          for (let k = 0; k < 200; k++) saStep(temp);
+        } else if (phase === 'polish') {
+          if (el >= budget || polishPass >= 3) { phase = 'cleanup'; continue; }
+          for (let k = 0; k < 20 && polishI < N; k++) polishTile(polishI++);
+          if (polishI >= N) { polishI = 0; polishPass++; }
+          if (cur > best + 1e-9) { best = cur; bestGrid.set(grid); }
+        } else if (phase === 'cleanup') {
+          // Remove logs that earn nothing (unreachable) when that costs nothing
+          loadGrid(ctx, bestGrid); cur = evalScore(ctx);
+          for (let i = 0; i < N; i++) {
+            if (grid[i] !== 1) continue;
+            const u = apply([i, 0, -1, 0]); if (!u) continue;
+            const v = evalScore(ctx);
+            if (v >= cur - 1e-6) cur = v; else undo(u);
+          }
+          if (cur >= best - 1e-6) { best = cur; bestGrid.set(grid); }
+          phase = 'done';
+        } else break;
+      }
+      const done = phase === 'done';
+      return { done, progress: done ? 1 : Math.min(0.99, (performance.now() - t0) / budget), grid: bestGrid.slice(), score: best };
+    }
+  };
+}
+
+// Full breakdown for display
+function logInfo(ctx, i) {
+  const { W, H, grid } = ctx, x = i % W, y = (i - x) / W;
+  let n = 0, mat = 0, moss = 0; const by = new Array(8).fill(0), w = [0, 0, 0, 0, 0];
+  const add = c => { if (isTree(c)) { n++; by[c]++; if (c <= 6) { mat++; moss += MOSSY[c]; for (let t = 0; t < 5; t++) w[t] += TILE[c].mush[t]; } } };
+  if (ctx.wrap) {
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++)
+      add(grid[((((y + dy) % H) + H) % H) * W + (((x + dx) % W) + W) % W]);
+  } else {
+    for (let yy = Math.max(0, y - 3); yy <= Math.min(H - 1, y + 3); yy++)
+      for (let xx = Math.max(0, x - 3); xx <= Math.min(W - 1, x + 3); xx++) add(grid[yy * W + xx]);
+  }
+  const B = Math.max(1, Math.floor(n * 0.75)), tot = B + mat, k = n >> 1;
+  const amt = (Math.min(5, Math.max(1, k)) + Math.min(5, Math.max(1, 2 * k))) / 2;
+  const p = Math.min(1, (n + moss * ctx.o.moss) / 40), q = qdist(p);
+  const probs = w.map((v, t) => (B * BASIC[t] + v) / tot);
+  const perDay = probs.map(pr => pr * amt / ctx.interval);
+  const goldDay = perDay.map((v, t) => v * q.reduce((a, qq, k2) => a + qq * QPRICE[t][k2], 0));
+  return { n, mat, by, B, amt, p, q, probs, perDay, goldDay, total: amt / ctx.interval, gold: goldDay.reduce((a, b) => a + b, 0) };
+}
+
+function analyze(W, H, o, grid) {
+  const ctx = makeCtx(W, H, o); loadGrid(ctx, grid);
+  if (o.access) evalScore(ctx); // fills reach + picks the walkway network (continuous mode)
+  const A = { W, H, o, interval: ctx.interval, tapVal: ctx.tapVal, tiles: [], mushDay: [0, 0, 0, 0, 0], mushGold: [0, 0, 0, 0, 0],
+    q: [0, 0, 0, 0], qW: 0, logs: 0, logsBlocked: 0, trees: new Array(8).fill(0), tapped: new Array(8).fill(0),
+    tapBlocked: 0, saplings: 0, invalid: 0, empty: 0, path: 0, unused: 0, entrance: -1 };
+  const onPath = j => o.access && grid[j] === 0 && (ctx.wrap
+    ? ctx.reach[j] > 0 && ctx.flags[ctx.reach[j]] >= (o.continuous ? 2 : 1)
+    : o.continuous ? ctx.sel > 0 && ctx.reach[j] === ctx.sel : ctx.reach[j] > 0);
+  if (o.access && o.continuous && !ctx.wrap && ctx.sel > 0) {
+    // Show the entrance at the chosen side's walkway tile nearest that side's middle
+    let bd = Infinity;
+    for (const j of edgeTiles(ctx)) if (onPath(j)) {
+      const x = j % W, y = (j - x) / W, onTB = y === 0 || y === H - 1;
+      const d = (onTB ? Math.abs(x - (W - 1) / 2) : Math.abs(y - (H - 1) / 2)) + (o.side === 'any' && y !== H - 1 ? W + H : 0);
+      if (d < bd) { bd = d; A.entrance = j; }
+    }
+    const x = A.entrance % W, y = (A.entrance - x) / W;
+    const side = o.side !== 'any' ? o.side : y === H - 1 ? 'bottom' : y === 0 ? 'top' : x === 0 ? 'left' : 'right';
+    A.entranceArrow = { bottom: '↑', top: '↓', left: '→', right: '←' }[side];
+  }
+  for (let i = 0; i < ctx.N; i++) {
+    const c = grid[i], info = { c, acc: true };
+    if (!validAt(ctx, i)) { info.invalid = true; A.invalid++; }
+    if (c === 0 && o.access) { info.path = onPath(i); if (info.path) A.path++; else A.unused++; }
+    if (c === 1) {
+      info.log = logInfo(ctx, i); A.logs++;
+      info.acc = !o.access || accessible(ctx, i, o.orth);
+      if (!info.acc) A.logsBlocked++;
+      else {
+        for (let t = 0; t < 5; t++) { A.mushDay[t] += info.log.perDay[t]; A.mushGold[t] += info.log.goldDay[t]; }
+        for (let k = 0; k < 4; k++) A.q[k] += info.log.q[k] * info.log.total;
+        A.qW += info.log.total;
+      }
+    } else if (isMature(c)) {
+      A.trees[c]++;
+      if (o.tap) {
+        info.acc = !o.access || accessible(ctx, i, o.orthTrees);
+        if (info.acc) { A.tapped[c]++; info.tapped = true; } else A.tapBlocked++;
+      }
+    } else if (c === 7) A.saplings++;
+    else if (c === 0) A.empty++;
+    A.tiles.push(info);
+  }
+  A.tapDay = A.tapped.map((n, c) => isMature(c) ? n * tapQty(TILE[c], o.heavy) / (o.heavy ? TILE[c].heavy : TILE[c].days) : 0);
+  A.tapGold = A.tapped.map((n, c) => n * ctx.tapVal[c]);
+  A.mushTotal = A.mushDay.reduce((a, b) => a + b, 0);
+  A.mushGoldTotal = A.mushGold.reduce((a, b) => a + b, 0);
+  A.tapGoldTotal = A.tapGold.reduce((a, b) => a + b, 0);
+  A.gold = A.mushGoldTotal + A.tapGoldTotal;
+  return A;
+}
+</script>
+
+<script id="workerSrc" type="text/plain">
+self.onmessage = e => {
+  const { W, H, o, budget, auto } = e.data;
+  if (!auto) {
+    const opt = createOptimizer(W, H, o, budget);
+    for (;;) {
+      const r = opt.step(150); r.W = W; r.H = H;
+      self.postMessage(r);
+      if (r.done) break;
+    }
+    return;
+  }
+  // Auto tile size: give every size from 2x2 up to WxH a short search, keep the one earning the most
+  // per square of land, then spend the other half of the time refining it.
+  const sizes = [];
+  for (let w = 2; w <= W; w++) for (let h = 2; h <= H; h++) sizes.push([w, h]);
+  const scout = budget * 0.5 / sizes.length;
+  let best = null;
+  sizes.forEach(([w, h], k) => {
+    const opt = createOptimizer(w, h, o, scout);
+    let r; do r = opt.step(scout + 50); while (!r.done);
+    const d = r.score / (w * h);
+    if (!best || d > best.d) best = { d, w, h, grid: r.grid };
+    self.postMessage({ done: false, progress: 0.5 * (k + 1) / sizes.length, grid: best.grid, W: best.w, H: best.h });
+  });
+  const opt = createOptimizer(best.w, best.h, o, budget * 0.5, [best.grid]);
+  for (;;) {
+    const r = opt.step(150); r.W = best.w; r.H = best.h; r.progress = 0.5 + 0.5 * r.progress;
+    self.postMessage(r);
+    if (r.done) break;
+  }
+};
+</script>
+
+<!-- ================= UI ================= -->
+<script>
+const $ = id => document.getElementById(id);
+const SEASON = 28, YEAR = 112;
+// Each layout type keeps its own layout, so switching back and forth loses nothing
+const S = { fixed: { W: 12, H: 10, grid: new Uint8Array(120) }, tile: { W: 6, H: 6, grid: new Uint8Array(36) } };
+let mode = 'fixed', W = S.fixed.W, H = S.fixed.H, grid = S.fixed.grid;
+let A = null, T = null, growth = null, brush = -1, cells = [], runId = 0, worker = null, running = false, autoFound = false;
+const fmt = (v, d = 0) => (Math.round(v * 10 ** d) / 10 ** d).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+const pct = v => fmt(v * 100, v < 0.1 && v > 0 ? 1 : 0) + '%';
+const cssVar = c => ['--c-empty', '--c-log', '--c-oak', '--c-maple', '--c-pine', '--c-mystic', '--c-mahog', '--c-sap'][c];
+const sw = c => `<span class="sw" style="background:var(${cssVar(c)})"></span>`;
+const msw = t => `<span class="sw" style="background:${MUSH[t].color}"></span>`;
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+function intIn(id, lo, hi, def) { const v = Math.round(+$(id).value); return v ? Math.max(lo, Math.min(hi, v)) : def; }
+const treeCount = R => R.trees.reduce((a, b) => a + b, 0) + R.saplings;
+
+// ---- build controls ----
+const defaultTrees = { 2: true, 3: true, 4: true, 5: false, 6: false };
+$('treeChecks').innerHTML = TREE_CODES.map(c => {
+  const t = TILE[c], m = c === 3 ? 'Red (90%) / Purple' : c === 6 ? 'random mushrooms only' : MUSH[t.mush.indexOf(1)].name;
+  return `<label class="chk"><input type="checkbox" id="tree${c}" ${defaultTrees[c] ? 'checked' : ''}><span>${sw(c)}<b>${t.name}</b><br><span class="muted">${m} · taps ${t.product}</span></span></label>`;
+}).join('');
+
+function readOpts() {
+  return {
+    wrap: mode === 'tile',
+    allowed: TREE_CODES.filter(c => $('tree' + c).checked),
+    saplings: $('saplings').checked, access: $('access').checked,
+    continuous: $('access').checked && $('continuous').checked, side: $('side').value,
+    walkOnly: $('access').checked && ($('walkOnly').checked || $('continuous').checked),
+    orth: $('access').checked && $('orth').checked, orthTrees: $('access').checked && $('orth').checked && $('orthTrees').checked,
+    tap: $('tap').checked, heavy: $('tapper').value === '1', tapperProf: $('prof').checked,
+    moss: +$('moss').value / 100, rain: +$('rain').value / 100,
+    target: +$('target').value, targetPct: +$('pct').value / 100,
+  };
+}
+
+function syncLabels() {
+  const tile = mode === 'tile';
+  $('pctOut').textContent = $('pct').value + '%';
+  $('mossOut').textContent = $('moss').value + '%';
+  $('rainOut').textContent = $('rain').value + '%';
+  $('fixedSize').hidden = tile; $('tileSize').hidden = !tile;
+  $('plotTitle').textContent = tile ? 'Tile' : 'Plot';
+  $('modeHint').textContent = tile
+    ? 'Design a small pattern you can copy side by side as you craft more logs. Copies share trees and walkways with their neighbors.'
+    : 'Plan one plot of a set size.';
+  $('contText').textContent = tile ? 'Make all walkways one connected network across every tile' : 'Make the walkway one continuous path with a single entrance';
+  $('walkOnlyText').textContent = tile ? 'Harvest only from walkways, never from outside the finished farm\'s edge' : 'Harvest only from walkways, never from outside the plot\'s edge';
+  $('sideLabel').hidden = tile; $('contHint').hidden = tile; $('tileAccessHint').hidden = !tile;
+  if (!running) $('go').textContent = tile ? 'Generate best tile' : 'Generate optimal layout';
+  const o = readOpts();
+  $('pctLabel').style.opacity = o.target < 0 ? .45 : 1;
+  $('pct').disabled = o.target < 0;
+  $('tapper').disabled = $('prof').disabled = !o.tap;
+  const acc = $('access').checked;
+  $('accessOpts').style.opacity = acc ? 1 : .45;
+  ['continuous', 'side', 'orth', 'orthTrees', 'walkOnly'].forEach(id => $(id).disabled = !acc);
+  if (acc && $('continuous').checked) { $('walkOnly').checked = true; $('walkOnly').disabled = true; }
+  $('side').disabled = !acc || !$('continuous').checked;
+  $('sideLabel').style.opacity = $('side').disabled ? .5 : 1;
+  $('orthTrees').disabled = !acc || !$('orth').checked;
+  if (o.target < 0) { $('maxHint').textContent = 'The layout goes for the most gold, whatever the mushroom mix.'; return; }
+  const m = maxShare(o.target, o.allowed);
+  $('maxHint').innerHTML = `Logs always mix in some random mushrooms, so no layout can make 100% ${MUSH[o.target].name}s. With the trees you've allowed, the most you can get is about <b>${pct(m)}</b>.` +
+    (o.targetPct > m ? ` Your target is higher than that, so the planner will get as close as it can.` : '');
+}
+
+// ---- brushes / legend ----
+function buildBrushes() {
+  const items = [[-1, 'Inspect', null], ...[1, 2, 3, 4, 5, 6, 7, 0].map(c => [c, TILE[c].name, c])];
+  $('brushes').innerHTML = items.map(([c, n, s]) =>
+    `<button class="brush${brush === c ? ' on' : ''}" data-b="${c}">${s === null ? '🔍' : sw(s)}${n}</button>`).join('');
+}
+$('brushes').addEventListener('click', e => {
+  const b = e.target.closest('.brush'); if (!b) return;
+  brush = +b.dataset.b; buildBrushes();
+});
+
+// ---- grid rendering (A = what's drawn: the plot, or the tiled preview) ----
+function cellSize(n) {
+  // Fit the whole map on screen: squares shrink (down to 4px on a phone) before the map scrolls
+  const avail = $('gridWrap').clientWidth - 6, floor = avail < 500 ? 4 : 10;
+  return Math.max(floor, Math.min(44, Math.floor((avail - (n - 1)) / n)));
+}
+function tileIndex(i) { const x = i % A.W, y = (i - x) / A.W; return (y % H) * W + (x % W); }
+function renderGrid() {
+  const DW = A.W, DH = A.H, cs = cellSize(DW), g = $('grid'), tile = mode === 'tile';
+  g.style.setProperty('--cs', cs + 'px');
+  g.style.gridTemplateColumns = `repeat(${DW}, ${cs}px)`;
+  g.style.gap = cs < 8 ? '0' : ''; // no gaps between tiny squares, so a big plot still fits
+  const frag = document.createDocumentFragment(); cells = [];
+  for (let i = 0; i < DW * DH; i++) {
+    const info = A.tiles[i], c = info.c, d = document.createElement('div'), x = i % DW, y = (i - x) / DW;
+    let cls = 'cell t' + c;
+    if (info.tapped) cls += ' tap';
+    if (!info.acc) cls += ' blocked';
+    if (info.invalid) cls += ' invalid';
+    if (c === 0 && A.o.access) cls += info.path ? ' path' : ' unused';
+    if (i === A.entrance) cls += ' entrance';
+    if (tile) {
+      if (x >= W || y >= H) cls += ' copy';
+      if ((x + 1) % W === 0 && x < DW - 1) cls += ' tr';
+      if ((y + 1) % H === 0 && y < DH - 1) cls += ' tb';
+    }
+    d.className = cls; d.dataset.i = i;
+    if (i === A.entrance) d.textContent = A.entranceArrow;
+    else if (cs >= 14) d.textContent = TILE[c].short;
+    frag.appendChild(d); cells.push(d);
+  }
+  g.replaceChildren(frag);
+  $('gridTitle').textContent = tile
+    ? `Tile: ${W} × ${H}${autoFound ? ' (best size found)' : ''}, shown ${A.nx} × ${A.ny} times`
+    : `Layout: ${W} × ${H}`;
+  $('gridNote').textContent = tile
+    ? 'The bright top-left tile is the pattern. The dimmed copies show how it repeats, and editing any copy edits the pattern. Hover a log to see its 7×7 range.'
+    : 'Hover a log to see its 7×7 range. Pick a brush to edit tiles by hand. A yellow dot marks a tapper.';
+}
+
+// ---- tooltip + range highlight ----
+let hl = [];
+function clearHL() { hl.forEach(d => d.classList.remove('inr', 'hub')); hl = []; }
+function showTip(i, ev) {
+  const DW = A.W, DH = A.H, info = A.tiles[i], c = info.c, x = i % DW, y = (i - x) / DW, o = A.o, tile = mode === 'tile';
+  const Ti = tile ? T.tiles[tileIndex(i)] : null;
+  clearHL();
+  let h = `<span class="tt">${TILE[c].name} <span class="dim">(${tile ? `tile square ${(x % W) + 1}, ${(y % H) + 1}` : `${x + 1}, ${y + 1}`})</span></span>`;
+  if (c === 1) {
+    for (let yy = Math.max(0, y - 3); yy <= Math.min(DH - 1, y + 3); yy++)
+      for (let xx = Math.max(0, x - 3); xx <= Math.min(DW - 1, x + 3); xx++) { const d = cells[yy * DW + xx]; d.classList.add('inr'); hl.push(d); }
+    cells[i].classList.add('hub');
+    const L = info.log;
+    const trees = [2, 3, 4, 5, 6, 7].filter(t => L.by[t]).map(t => `${L.by[t]} ${TILE[t].name.replace(' Tree', '')}`).join(', ') || 'none';
+    h += `Trees in range: <b>${L.n}</b> (${trees})<br>`;
+    h += `About <b>${fmt(L.amt, 1)}</b> mushrooms per harvest, every ${fmt(A.interval, 1)} days<br>`;
+    h += `Mix: ${L.probs.map((p, t) => [p, t]).filter(a => a[0] > 0.001).sort((a, b) => b[0] - a[0]).map(([p, t]) => `${MUSH[t].name} ${pct(p)}`).join(' · ')}<br>`;
+    h += `Quality: ${L.q.map((q, k) => `${QNAMES[k]} ${pct(q)}`).join(' · ')}<br>`;
+    h += `Worth about <b>${fmt(L.gold, 1)}g</b> per day here`;
+    if (tile && Math.abs(Ti.log.gold - L.gold) > 0.05) h += `<br><span class="dim">With copies on every side: ${fmt(Ti.log.gold, 1)}g per day</span>`;
+    if (!info.acc) h += `<br><span style="color:var(--warn)">Unreachable: this log isn't counted in the totals</span>`;
+  } else if (isMature(c)) {
+    const t = TILE[c];
+    const adds = c === 6 ? 'one random mushroom (Common, Red or Purple)' : c === 3 ? 'a Red (90%) or Purple (10%) mushroom' : 'a ' + MUSH[t.mush.indexOf(1)].name;
+    h += `Adds ${adds} to the pool of every log within 3 squares${tile ? ', including logs in neighboring tiles' : ''}.<br>`;
+    if (o.tap) {
+      const days = o.heavy ? t.heavy : t.days;
+      h += info.acc ? `Tapper: ${t.qty > 1 ? (o.heavy ? '3–8' : '5–10') + ' ' : ''}${t.product} every ${days} day${days > 1 ? 's' : ''} (${fmt(A.tapVal[c], 1)}g per day)`
+                    : `<span style="color:var(--warn)">Can't be reached, so it isn't tapped</span>`;
+    }
+  } else if (c === 7) {
+    h += 'Stays at stage 4 because a grown tree is next to it. Counts toward nearby logs\' tree totals and quality. Adds random mushrooms only.';
+  } else if (c === 0) {
+    h += !o.access ? 'Empty ground.'
+      : i === A.entrance ? 'Entrance: walk in here.'
+      : info.path ? 'Walkway.'
+      : o.continuous ? 'Empty ground that isn\'t connected to the path.' : 'Empty ground you can\'t walk to.';
+  }
+  if (info.invalid || (Ti && Ti.invalid)) h += `<br><span style="color:var(--warn)">${c === 7 ? 'No grown tree next to this sapling, so it will grow into a full tree.' : `Touches another grown tree${tile ? ' (possibly in the next tile)' : ''}, so one of them will stop growing.`}</span>`;
+  const tip = $('tip'); tip.innerHTML = h; tip.hidden = false; moveTip(ev);
+}
+function moveTip(ev) {
+  const tip = $('tip'); if (tip.hidden) return;
+  const r = tip.getBoundingClientRect();
+  let lx = ev.clientX + 14, ly = ev.clientY + 14;
+  if (lx + r.width > innerWidth - 8) lx = ev.clientX - r.width - 14;
+  if (ly + r.height > innerHeight - 8) ly = ev.clientY - r.height - 14;
+  tip.style.left = Math.max(8, lx) + 'px'; tip.style.top = Math.max(8, ly) + 'px';
+}
+function hideTip() { $('tip').hidden = true; clearHL(); }
+
+let painting = false, lastTip = -1;
+const gridEl = $('grid');
+function cellAt(ev) { const el = document.elementFromPoint(ev.clientX, ev.clientY); return el && el.classList.contains('cell') ? +el.dataset.i : -1; }
+function paint(i) {
+  if (i < 0 || brush < 0) return;
+  const j = mode === 'tile' ? tileIndex(i) : i;
+  if (grid[j] === brush) return;
+  grid[j] = brush; scheduleRender();
+}
+gridEl.addEventListener('pointerdown', ev => {
+  const i = cellAt(ev); if (i < 0) return;
+  if (brush >= 0) { painting = true; paint(i); ev.preventDefault(); }
+  else { lastTip = i; showTip(i, ev); }
+});
+gridEl.addEventListener('pointermove', ev => {
+  const i = cellAt(ev);
+  if (painting) { paint(i); return; }
+  if (i < 0) { hideTip(); lastTip = -1; return; }
+  if (i !== lastTip) { lastTip = i; showTip(i, ev); } else moveTip(ev);
+});
+gridEl.addEventListener('pointerleave', () => { if (!painting) { hideTip(); lastTip = -1; } });
+addEventListener('pointerup', () => { painting = false; });
+
+let rq = 0;
+function scheduleRender() { if (!rq) rq = requestAnimationFrame(() => { rq = 0; renderAll(); }); }
+
+// ---- analysis ----
+// The finished farm (preview and growth table) is a normal plot built from copies of the tile
+const regionOpts = o => ({ ...o, wrap: false, side: 'any' });
+function tiled(nx, ny) {
+  const RW = W * nx, RH = H * ny, g = new Uint8Array(RW * RH);
+  for (let y = 0; y < RH; y++) for (let x = 0; x < RW; x++) g[y * RW + x] = grid[(y % H) * W + (x % W)];
+  return g;
+}
+function growthTable(o, nx, ny) {
+  const list = [[1, 1], [2, 1], [2, 2], [3, 2], [3, 3], [4, 4], [5, 5], [6, 6]];
+  if (!list.some(([a, b]) => a === nx && b === ny)) list.push([nx, ny]);
+  list.sort((p, q) => p[0] * p[1] - q[0] * q[1] || p[0] - q[0]);
+  const ro = regionOpts(o);
+  return list.filter(([a, b]) => W * a * H * b <= 40000).map(([a, b]) => {
+    const r = analyze(W * a, H * b, ro, tiled(a, b));
+    return { a, b, n: a * b, logs: r.logs, blocked: r.logsBlocked, trees: treeCount(r), gold: r.gold, cur: a === nx && b === ny };
+  });
+}
+function renderAll() {
+  const o = readOpts();
+  if (mode === 'tile') {
+    const nx = intIn('nx', 1, 12, 3), ny = intIn('ny', 1, 12, 3);
+    T = analyze(W, H, o, grid);
+    A = analyze(W * nx, H * ny, regionOpts(o), tiled(nx, ny)); A.nx = nx; A.ny = ny;
+    growth = running ? null : growthTable(o, nx, ny); // skipped while the search is still changing the tile
+  } else { T = null; growth = null; A = analyze(W, H, o, grid); }
+  hideTip(); lastTip = -1;
+  renderGrid(); renderResults();
+}
+
+// ---- results ----
+function renderResults() {
+  const tile = mode === 'tile', P = tile ? T : A, o = P.o;
+  const stat = (k, v, s) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+  let st;
+  if (tile) {
+    st = stat('Gold per day, per tile', fmt(P.gold) + 'g', `${fmt(P.mushGoldTotal)}g mushrooms · ${fmt(P.tapGoldTotal)}g tapping`)
+       + stat('Gold per year, per tile', fmt(P.gold * YEAR) + 'g', '112 days, with copies on every side')
+       + stat('Each tile holds', plural(P.logs, 'log'), `${plural(treeCount(P), 'tree')} on ${W}×${H} = ${W * H} squares`)
+       + stat(`Preview: ${A.nx} × ${A.ny} tiles`, fmt(A.gold) + 'g/day', `${plural(A.logs, 'log')} · ${fmt(A.gold * YEAR)}g per year`);
+  } else {
+    st = stat('Gold per day', fmt(A.gold) + 'g', `${fmt(A.mushGoldTotal)}g mushrooms · ${fmt(A.tapGoldTotal)}g tapping`)
+       + stat('Gold per season', fmt(A.gold * SEASON) + 'g', '28 days')
+       + stat('Gold per year', fmt(A.gold * YEAR) + 'g', '112 days. Logs and tappers work all year.')
+       + stat('Mushrooms per season', fmt(A.mushTotal * SEASON), `from ${plural(A.logs - A.logsBlocked, 'log')}`);
+  }
+  if (o.target >= 0) {
+    const share = P.mushTotal ? P.mushDay[o.target] / P.mushTotal : 0;
+    st += stat(`${MUSH[o.target].name} share`, pct(share), `target ${pct(o.targetPct)} ${share + 0.0005 >= o.targetPct ? '✓ met' : '✗ not met'}`);
+  }
+  $('stats').innerHTML = st;
+
+  // messages
+  let m = '';
+  if (o.target >= 0) {
+    const share = P.mushTotal ? P.mushDay[o.target] / P.mushTotal : 0, mx = maxShare(o.target, o.allowed);
+    if (share + 0.0005 < o.targetPct)
+      m += `<div class="msg warn">This layout makes ${pct(share)} ${MUSH[o.target].name}s, short of your ${pct(o.targetPct)} target. ${o.targetPct > mx ? `With your allowed trees the most possible is about ${pct(mx)}.` : 'Try a longer search time.'}</div>`;
+  }
+  if (!tile && o.continuous && A.entrance < 0) m += `<div class="msg warn">No walkway touches the ${o.side === 'any' ? 'plot edge' : o.side + ' edge'}, so there's no way in. Leave an empty tile on that edge.</div>`;
+  if (P.logsBlocked) m += tile
+    ? `<div class="msg warn">${plural(P.logsBlocked, 'log')} per tile can't be reached once the tile is repeated. ${o.continuous ? 'Their walkway isn\'t part of one network that joins every tile' : 'Their walkway doesn\'t run off the tile to join the next copy'}${o.orth ? ', or it isn\'t directly beside them' : ''}. They have a red outline in the per-tile figures and aren't counted.</div>`
+    : `<div class="msg warn">${plural(P.logsBlocked, 'log')} can't be reached from ${o.continuous ? 'the path' : 'a walkway'}${o.orth ? ' by standing directly beside them' : ''}. They have a red outline and their mushrooms aren't counted.</div>`;
+  if (P.tapBlocked) m += `<div class="msg">${plural(P.tapBlocked, 'tree')}${tile ? ' per tile' : ''} can't be reached (red outline), so they aren't tapped. They still count for nearby logs.</div>`;
+  if (P.invalid) m += `<div class="msg warn">${plural(P.invalid, 'square')} break the tree-spacing rules (striped)${tile ? ', counting trees in the next tile over' : ''}. Grown trees can't touch each other, even diagonally, and a stunted sapling has to touch a grown tree.</div>`;
+  $('msgs').innerHTML = m;
+
+  // shopping list
+  const tapperName = o.heavy ? 'Heavy Tapper' : 'Tapper';
+  const nTapped = P.tapped.reduce((a, b) => a + b, 0);
+  let shop = `<li>${sw(1)}<b>${P.logs}</b> Mushroom Log${P.logs === 1 ? '' : 's'} <span class="muted">(${P.logs * 10} Hardwood + ${P.logs * 10} Moss)</span></li>`;
+  for (const c of TREE_CODES) if (P.trees[c]) shop += `<li>${sw(c)}<b>${P.trees[c]}</b> ${TILE[c].name}${P.trees[c] === 1 ? '' : 's'} <span class="muted">(plant ${TILE[c].seed}s)</span></li>`;
+  if (P.saplings) shop += `<li>${sw(7)}<b>${P.saplings}</b> stunted sapling${P.saplings === 1 ? '' : 's'} <span class="muted">(any wild tree seed)</span></li>`;
+  if (o.tap && nTapped) shop += `<li><span class="sw" style="background:#f3d36b"></span><b>${nTapped}</b> ${tapperName}${nTapped === 1 ? '' : 's'}</li>`;
+  if (o.access) {
+    shop += `<li>${sw(0)}<b>${P.path}</b> walkway square${P.path === 1 ? '' : 's'}${o.continuous ? (tile ? ' in one network across tiles' : ' in one connected path') : ''}</li>`;
+    if (P.unused) shop += `<li>${sw(0)}<b>${P.unused}</b> unused empty square${P.unused === 1 ? '' : 's'} <span class="muted">(dotted)</span></li>`;
+  } else shop += `<li>${sw(0)}<b>${P.empty}</b> empty square${P.empty === 1 ? '' : 's'}</li>`;
+
+  // mushrooms
+  const order = [0, 1, 2, 3, 4].filter(t => P.mushDay[t] > 1e-9).sort((a, b) => P.mushGold[b] - P.mushGold[a]);
+  const bar = P.mushTotal ? order.map(t => `<div title="${MUSH[t].name} ${pct(P.mushDay[t] / P.mushTotal)}" style="width:${P.mushDay[t] / P.mushTotal * 100}%;background:${MUSH[t].color}"></div>`).join('') : '';
+  const mRows = order.map(t => `<tr><td>${msw(t)}${MUSH[t].name}</td><td>${pct(P.mushDay[t] / P.mushTotal)}</td><td>${fmt(P.mushDay[t] * SEASON, 1)}</td><td>${fmt(P.mushDay[t] * YEAR)}</td><td>${fmt(P.mushGold[t] * YEAR)}g</td></tr>`).join('');
+  const qCols = ['#b9ad93', '#b8c4cf', '#e7bf3b', '#8b52d9'];
+  const qBar = P.qW ? P.q.map((q, k) => `<div title="${QNAMES[k]}" style="width:${q / P.qW * 100}%;background:${qCols[k]}"></div>`).join('') : '';
+  const qTxt = P.qW ? P.q.map((q, k) => `<span class="sw" style="background:${qCols[k]}"></span>${QNAMES[k]} ${pct(q / P.qW)}`).join(' &nbsp; ') : '';
+
+  // tapping
+  const tRows = TREE_CODES.filter(c => P.tapped[c]).map(c => {
+    const t = TILE[c], d = o.heavy ? t.heavy : t.days;
+    return `<tr><td>${sw(c)}${t.product}</td><td>${P.tapped[c]}</td><td>${d} d</td><td>${fmt(P.tapDay[c] * SEASON, 1)}</td><td>${fmt(P.tapGold[c] * YEAR)}g</td></tr>`;
+  }).join('');
+
+  // tree guide
+  const guide = TREE_CODES.map(c => {
+    const t = TILE[c], ms = c === 3 ? 'Red 90% / Purple 10%' : c === 6 ? 'Random (Common/Red/Purple)' : MUSH[t.mush.indexOf(1)].name;
+    const pr = (t.syrup && o.tapperProf) ? Math.floor(t.price * 1.25) : t.price;
+    return `<tr><td>${sw(c)}${t.name}</td><td style="text-align:left">${ms}</td><td style="text-align:left">${t.product}${t.qty > 1 ? (o.heavy ? ' ×3–8' : ' ×5–10') : ''}</td><td>${pr}g</td><td>${t.days} / ${t.heavy} d</td></tr>`;
+  }).join('');
+
+  // growth table (tile mode)
+  let grow = '';
+  if (tile) {
+    const rows = growth ? growth.map(g => `<tr${g.cur ? ' class="hl"' : ''}><td>${g.a} × ${g.b} tiles</td><td>${g.n}</td><td>${W * g.a} × ${H * g.b}</td><td>${g.logs}${g.blocked ? ` <span class="muted">(${g.blocked} unreachable)</span>` : ''}</td><td>${g.trees}</td><td>${fmt(g.gold)}g</td><td>${fmt(g.gold / g.n)}g</td></tr>`).join('') : '';
+    grow = `<section class="panel"><h3>Growing your farm</h3>
+      <p class="hint" style="margin:0 0 8px">Add copies as you craft more logs. Tiles on the outside of a group have fewer neighbors, so small groups earn a little less per tile than the ${fmt(P.gold)}g a tile earns when it's surrounded. The highlighted row is the preview. Logs on the outer edge of a group can end up with their walkway in a tile you haven't placed yet. Those are counted as unreachable until you add a walkway beside them.</p>
+      ${growth ? `<div class="scroll"><table class="stack"><thead><tr><th>Layout</th><th>Tiles</th><th>Land</th><th>Logs</th><th>Trees</th><th>Gold/day</th><th>Per tile</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="muted">Shown when the search finishes.</p>'}
+    </section>`;
+  }
+
+  const per = tile ? ' per tile' : '';
+  $('cards').innerHTML = `
+  <section class="panel"><h3>${tile ? 'One tile needs' : 'What you need'}</h3><ul class="list">${shop}</ul></section>
+  ${grow}
+  <section class="panel"><h3>Mushroom yield${per}</h3>
+    ${P.mushTotal ? `<div class="bar">${bar}</div>
+    <div class="scroll"><table class="stack"><thead><tr><th>Mushroom</th><th>Share</th><th>/season</th><th>/year</th><th>Gold/yr</th></tr></thead>
+    <tbody>${mRows}</tbody><tfoot><tr><td>Total</td><td></td><td>${fmt(P.mushTotal * SEASON, 1)}</td><td>${fmt(P.mushTotal * YEAR)}</td><td>${fmt(P.mushGoldTotal * YEAR)}g</td></tr></tfoot></table></div>
+    <p class="hint" style="margin-top:12px">Average quality</p><div class="bar">${qBar}</div><div class="hint">${qTxt}</div>` : '<p class="muted">No reachable Mushroom Logs yet.</p>'}
+  </section>
+  <section class="panel"><h3>Tapping yield${per}</h3>
+    ${!o.tap ? '<p class="muted">Tapping is off. Turn on “Tap the trees” to count it.</p>' : tRows ? `<div class="scroll"><table class="stack"><thead><tr><th>Product</th><th>Trees</th><th>Every</th><th>/season</th><th>Gold/yr</th></tr></thead>
+    <tbody>${tRows}</tbody><tfoot><tr><td>Total</td><td>${nTapped}</td><td></td><td></td><td>${fmt(P.tapGoldTotal * YEAR)}g</td></tr></tfoot></table></div>
+    <p class="hint">Uses ${tapperName}s${o.tapperProf ? ' and the Tapper profession' : ''}. Tapped trees still count for nearby logs.</p>` : '<p class="muted">No reachable grown trees to tap.</p>'}
+  </section>
+  <section class="panel"><h3>Which trees make which mushrooms</h3>
+    <div class="scroll"><table class="stack" style="--stack-cols:1"><thead><tr><th>Tree</th><th style="text-align:left">Adds to log pool</th><th style="text-align:left">Tapper product</th><th>Price</th><th>Tapper / Heavy</th></tr></thead><tbody>${guide}</tbody></table></div>
+    <p class="hint">A log looks at every tree in the 7×7 square around it. Each grown tree adds its mushroom to the log's pool. The log also adds random mushrooms equal to ¾ of the tree count (at least 1): 80.75% Common, 14.25% Red, 5% Purple. Each harvest picks one mushroom from the pool. The amount is half the tree count, rounded down, times 1 or 2, capped at 5 (10 trees always gives 5). Quality: each tree, plus each mossy tree again, adds 2.5% per upgrade step toward Iridium.</p>
+  </section>`;
+  labelTables($('cards'));
+}
+
+// Copy each column's heading onto its cells, for the stacked phone layout
+function labelTables(root) {
+  root.querySelectorAll('table.stack').forEach(t => {
+    const heads = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    t.querySelectorAll('tbody tr, tfoot tr').forEach(tr => [...tr.children].forEach((td, i) => { if (heads[i] && !td.dataset.label) td.dataset.label = heads[i]; }));
+  });
+}
+
+// ---- optimization ----
+function setSize() {
+  const tile = mode === 'tile';
+  const nw = tile ? intIn('tw', 2, 16, 6) : intIn('w', 3, 64, 12), nh = tile ? intIn('th', 2, 16, 6) : intIn('h', 3, 64, 10);
+  if (nw === W && nh === H) return false;
+  const g = new Uint8Array(nw * nh);
+  for (let y = 0; y < Math.min(H, nh); y++) for (let x = 0; x < Math.min(W, nw); x++) g[y * nw + x] = grid[y * W + x];
+  W = nw; H = nh; grid = g; autoFound = false; return true;
+}
+
+function finishRun() {
+  running = false; worker = null;
+  $('go').disabled = false; syncLabels();
+}
+function cancelRun() {
+  runId++;
+  if (worker) { worker.terminate(); worker = null; }
+  running = false; $('prog').hidden = true; $('go').disabled = false; syncLabels();
+}
+
+function generate() {
+  setSize();
+  const o = readOpts(), budget = +$('effort').value, id = ++runId, auto = mode === 'tile' && $('autoSize').checked;
+  const reqW = auto ? intIn('tw', 2, 16, 6) : W, reqH = auto ? intIn('th', 2, 16, 6) : H;
+  if (worker) { worker.terminate(); worker = null; }
+  running = true;
+  $('go').disabled = true; $('go').textContent = auto ? 'Trying tile sizes…' : 'Optimizing…';
+  $('prog').hidden = false; $('staleHint').hidden = true;
+  let lastDraw = 0;
+  const onResult = r => {
+    if (id !== runId) return;
+    $('progBar').style.width = (r.progress * 100) + '%';
+    const now = performance.now();
+    if (r.done || now - lastDraw > 350) {
+      if (r.W) { W = r.W; H = r.H; }
+      grid = r.grid; autoFound = auto;
+      if (r.done) finishRun();
+      renderAll(); lastDraw = now;
+    }
+    if (r.done) setTimeout(() => { if (id === runId) $('prog').hidden = true; }, 600);
+  };
+  const runInline = () => { // fallback when workers are unavailable (no auto size search here)
+    const opt = createOptimizer(W, H, o, budget);
+    const tick = () => { if (id !== runId) return; const r = opt.step(40); onResult(r); if (!r.done) setTimeout(tick, 0); };
+    tick();
+  };
+  try {
+    const src = $('core').textContent + '\n' + $('workerSrc').textContent;
+    worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+    worker.onmessage = e => onResult(e.data);
+    worker.onerror = e => { e.preventDefault(); worker && worker.terminate(); worker = null; runInline(); };
+    worker.postMessage({ W: reqW, H: reqH, o, budget, auto });
+  } catch (err) { worker = null; runInline(); }
+}
+
+function switchMode(m) {
+  if (m === mode) return;
+  cancelRun();
+  S[mode] = { W, H, grid };
+  mode = m; ({ W, H, grid } = S[m]); autoFound = false;
+  syncLabels(); renderAll();
+  if (!grid.some(v => v)) { // first visit: fill it with a quick search
+    const e = $('effort').value; $('effort').value = '2000'; generate(); $('effort').value = e;
+  }
+}
+
+$('go').addEventListener('click', generate);
+document.querySelectorAll('.controls input, .controls select').forEach(el => {
+  el.addEventListener('input', () => {
+    if (el.name === 'mode') { switchMode(el.value); return; }
+    syncLabels();
+    if (el.id === 'effort' || el.id === 'autoSize') return;
+    if (['w', 'h', 'tw', 'th'].includes(el.id)) { if (!setSize()) return; }
+    if (el.id !== 'nx' && el.id !== 'ny') $('staleHint').hidden = false;
+    scheduleRender();
+  });
+});
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => A && renderGrid(), 120); });
+
+// ---- theme (dark by default) ----
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  $('themeBtn').textContent = t === 'dark' ? '☀ Light' : '🌙 Dark';
+  try { localStorage.setItem('mlp-theme', t); } catch (e) {}
+}
+let savedTheme = 'dark'; try { savedTheme = localStorage.getItem('mlp-theme') || 'dark'; } catch (e) {}
+setTheme(savedTheme);
+$('themeBtn').addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+$('modeFixed').checked = true; // the browser may restore the other choice on reload
+buildBrushes(); setSize(); syncLabels();
+renderAll();
+$('effort').value = '2000'; generate(); $('effort').value = '5000';
+</script>
+</body>
+</html>
